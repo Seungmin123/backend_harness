@@ -1,0 +1,11 @@
+{
+  "name": "whalee",
+  "owner": { "name": "whalee", "email": "dltmdals147@gmail.com" },
+  "plugins": [
+    {
+      "name": "backend-harness",
+      "source": "./plugins/backend-harness",
+      "description": "Java/Spring Boot 백엔드 하네스 — 에이전트 7종, 체인 스킬 5종, 안전 훅 3종, /harness-init 스캐폴딩"
+    }
+  ]
+}
