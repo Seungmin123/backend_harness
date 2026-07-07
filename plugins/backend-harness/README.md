@@ -7,7 +7,7 @@ Java / Spring Boot 백엔드용 Claude Code 하네스 플러그인.
 
 ```
 /plugin marketplace add Seungmin123/backend_harness
-/plugin install backend-harness@whalee
+/plugin install backend-harness@backend-harness
 ```
 
 프로젝트 저장소에 `templates/project-settings.json` 내용을 `.claude/settings.json`으로 커밋해

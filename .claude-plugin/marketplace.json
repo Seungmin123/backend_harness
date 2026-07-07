@@ -1,6 +1,6 @@
 {
-  "name": "whalee",
-  "owner": { "name": "whalee", "email": "dltmdals147@gmail.com" },
+  "name": "backend-harness",
+  "owner": { "name": "Seungmin123", "email": "dltmdals147@gmail.com" },
   "plugins": [
     {
       "name": "backend-harness",

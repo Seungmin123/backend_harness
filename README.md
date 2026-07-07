@@ -1,12 +1,12 @@
-# whalee claude-plugins
+# backend_harness — Claude Code 플러그인 마켓플레이스
 
-whalee 팀의 Claude Code 플러그인 마켓플레이스.
+Claude Code 플러그인 마켓플레이스.
 
 ## 사용법
 
 ```
 /plugin marketplace add Seungmin123/backend_harness
-/plugin install backend-harness@whalee
+/plugin install backend-harness@backend-harness
 ```
 
 또는 프로젝트 `.claude/settings.json`에 아래를 커밋해 두면 팀원이 저장소를 열 때 자동으로
@@ -15,9 +15,9 @@ whalee 팀의 Claude Code 플러그인 마켓플레이스.
 ```json
 {
   "extraKnownMarketplaces": {
-    "whalee": { "source": { "source": "github", "repo": "Seungmin123/backend_harness" } }
+    "backend-harness": { "source": { "source": "github", "repo": "Seungmin123/backend_harness" } }
   },
-  "enabledPlugins": { "backend-harness@whalee": true }
+  "enabledPlugins": { "backend-harness@backend-harness": true }
 }
 ```
 

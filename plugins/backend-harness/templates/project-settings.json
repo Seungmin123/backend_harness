@@ -1,10 +1,10 @@
 {
   "extraKnownMarketplaces": {
-    "whalee": {
+    "backend-harness": {
       "source": { "source": "github", "repo": "Seungmin123/backend_harness" }
     }
   },
   "enabledPlugins": {
-    "backend-harness@whalee": true
+    "backend-harness@backend-harness": true
   }
 }
