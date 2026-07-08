@@ -1,7 +1,7 @@
 ---
 name: code-quality
 description: "레이어 경계 위반, God Class, 순환 복잡도, Spring 안티패턴(필드 주입 등), DRY 위반을 탐지하는 코드 설계 품질 리뷰 에이전트. 일반 호출 시 보고 전담(ISSUES만 출력)이며, 검토-수정 사이클의 fix 담당으로 지정된 경우에만 기존 파일에 한해 직접 리팩토링을 적용한다."
-tools: Read, Grep, Glob, Edit, Bash(./mvnw checkstyle:check:*)
+tools: Read, Grep, Glob, Edit, Bash(./mvnw checkstyle:check:*), Bash(./gradlew checkstyleMain:*), Bash(./gradlew checkstyleTest:*)
 model: sonnet
 ---
 

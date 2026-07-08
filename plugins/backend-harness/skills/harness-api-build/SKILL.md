@@ -4,8 +4,8 @@ description: >
   신규 REST API를 처음부터 구축하는 체인. api-developer → qa-engineer → security-checker →
   ops-checker → code-reviewer 순으로 자동 실행하며 각 단계 산출물을 chain-report.json에 기록한다.
   harness-orchestrate가 "신규 API 개발"/"기능 구현" 요청을 이 경로로 판단했을 때 사용한다.
-allowed-tools: Read Write Edit Grep Glob Bash(./mvnw:*) Bash(git diff:*)
-compatibility: Requires Java 17, Spring Boot 3.x, Maven wrapper (./mvnw), git.
+allowed-tools: Read Write Edit Grep Glob Bash(./mvnw:*) Bash(./gradlew:*) Bash(git diff:*)
+compatibility: Requires Java 17+, Spring Boot 3.x+ (정확한 버전은 프로젝트 CLAUDE.md의 JAVA_VERSION/SPRING_BOOT_VERSION), Maven(./mvnw) 또는 Gradle(./gradlew) wrapper, git.
 ---
 
 # harness-api-build — 신규 API 구축 체인

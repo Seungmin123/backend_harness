@@ -58,5 +58,5 @@ paths:
 
 ## 의존성 보안
 
-- `./mvnw dependency-check:check` 정기 실행 (CVSS 7.0 이상 즉시 업그레이드)
+- `./mvnw dependency-check:check`(Gradle: `./gradlew dependencyCheckAnalyze`) 정기 실행 (CVSS 7.0 이상 즉시 업그레이드)
 - SNAPSHOT 버전 운영 배포 금지

@@ -1,7 +1,7 @@
 ---
 name: api-developer
 description: "Spring Boot 3.x REST API를 Controller-Service-Repository-DTO 계층으로 설계·구현하는 에이전트. 신규 엔드포인트 추가, 기존 API 확장 요청 시 사용. 트랜잭션 경계, 인증 방식 결정, OpenAPI spec 갱신까지 포함."
-tools: Read, Write, Edit, Grep, Glob, Bash(./mvnw compile:*), Bash(./mvnw test:*)
+tools: Read, Write, Edit, Grep, Glob, Bash(./mvnw compile:*), Bash(./mvnw test:*), Bash(./gradlew compileJava:*), Bash(./gradlew test:*)
 ---
 
 # Agent: api-developer
@@ -67,7 +67,7 @@ SUMMARY: 구현 내용 요약 (다음 에이전트에 전달할 컨텍스트).
 7. **검증 기준** (`.claude/rules/engineering-guidelines.md` 4번): 각 구현 단계가 끝났다는 것을
    무엇으로 확인할지 명시한다.
    ```
-   1. DTO/Repository/Service/Controller 구현 → verify: ./mvnw compile 성공
+   1. DTO/Repository/Service/Controller 구현 → verify: ./mvnw compile / ./gradlew compileJava 성공
    2. 비즈니스 로직 → verify: qa-engineer 단위 테스트 all green
    3. 엔드포인트 동작 → verify: qa-engineer 통합 테스트 all green (인증 컨텍스트 포함)
    ```

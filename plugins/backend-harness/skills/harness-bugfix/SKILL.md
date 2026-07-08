@@ -5,8 +5,8 @@ description: >
   통과하는지로 완료를 판정한다("재현 → 수정 → 검증" 순서, engineering-guidelines.md 4번 원칙 적용).
   "버그 고쳐", "버그 수정", "오류 수정", "이거 안 돼" 요청이 harness-orchestrate에서 이 경로로
   판단됐을 때 사용한다.
-allowed-tools: Read Write Edit Grep Glob Bash(./mvnw:*) Bash(git diff:*)
-compatibility: Requires Java 17, Spring Boot 3.x, Maven wrapper (./mvnw), git.
+allowed-tools: Read Write Edit Grep Glob Bash(./mvnw:*) Bash(./gradlew:*) Bash(git diff:*)
+compatibility: Requires Java 17+, Spring Boot 3.x+ (정확한 버전은 프로젝트 CLAUDE.md의 JAVA_VERSION/SPRING_BOOT_VERSION), Maven(./mvnw) 또는 Gradle(./gradlew) wrapper, git.
 ---
 
 # harness-bugfix — 버그 수정 체인 (재현 우선)
@@ -30,7 +30,8 @@ qa-engineer (재현 테스트 작성, RED 확인)
 
 1. **재현 테스트 작성**: `qa-engineer`를 `FOCUS: 버그 재현 — {버그 증상 설명}`으로 호출한다.
    - 반드시 **버그가 있는 현재 코드에서 실패하는 테스트**를 먼저 작성한다.
-   - `./mvnw -Dtest={테스트클래스} test`로 RED(실패)를 확인하고 로그를 남긴다.
+   - `./mvnw -Dtest={테스트클래스} test`(Gradle: `./gradlew test --tests {테스트클래스}`)로
+     RED(실패)를 확인하고 로그를 남긴다.
    - 이미 통과한다면(재현 실패) 버그 설명을 사용자에게 되묻는다 — 추측으로 진행하지 않는다
      (`.claude/rules/engineering-guidelines.md` 1번).
 
@@ -39,7 +40,7 @@ qa-engineer (재현 테스트 작성, RED 확인)
    버그의 원인 → `security-checker`, 성능 저하가 버그의 원인 → `perf-analyzer` 등). FOCUS에
    1단계에서 작성한 재현 테스트 경로와 실패 원인 가설을 전달한다.
 
-3. **GREEN 확인**: 수정 담당 에이전트가 수정을 마치면 `./mvnw -Dtest={테스트클래스} test`로
+3. **GREEN 확인**: 수정 담당 에이전트가 수정을 마치면 같은 테스트 실행 명령(RED 단계와 동일)으로
    재현 테스트가 통과하는지 확인한다. 통과하지 않으면 2단계로 돌아가되, 원인 가설을 갱신해
    `FOCUS`에 반영한다(무한 반복 방지를 위해 `harness-review-cycle` 스킬 문서와
    동일하게 최대 3회로 제한하고 초과 시 동일한 에스컬레이션 형식으로 보고한다).

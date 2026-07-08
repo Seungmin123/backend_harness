@@ -26,7 +26,11 @@ fi
 project_root="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 cd "$project_root" || exit 0
 
-if [[ ! -x ./mvnw ]]; then
+if [[ -x ./mvnw ]]; then
+  build_tool="maven"
+elif [[ -x ./gradlew ]]; then
+  build_tool="gradle"
+else
   exit 0
 fi
 
@@ -62,16 +66,25 @@ else
   test_fqcn="$(echo "$package_path" | tr '/' '.').${test_class}"
 fi
 
-mvn_args=(-q -Dtest="$test_fqcn" test)
-if [[ -n "$module_dir" ]]; then
-  # 서브모듈에 있는 테스트면 루트 mvnw에 -pl 로 해당 모듈만 지정한다.
-  mvn_args=(-q -pl "$module_dir" -Dtest="$test_fqcn" test)
+if [[ "$build_tool" == "maven" ]]; then
+  run_cmd=(./mvnw -q -Dtest="$test_fqcn" test)
+  if [[ -n "$module_dir" ]]; then
+    # 서브모듈에 있는 테스트면 루트 mvnw에 -pl 로 해당 모듈만 지정한다.
+    run_cmd=(./mvnw -q -pl "$module_dir" -Dtest="$test_fqcn" test)
+  fi
+else
+  gradle_task="test"
+  if [[ -n "$module_dir" ]]; then
+    # 멀티프로젝트면 디렉터리 경로를 Gradle 프로젝트 경로(:a:b:test)로 변환해 해당 모듈만 실행한다.
+    gradle_task=":$(echo "$module_dir" | tr '/' ':'):test"
+  fi
+  run_cmd=(./gradlew -q "$gradle_task" --tests "$test_fqcn")
 fi
 
 log_file="$(mktemp -t post-edit-test.XXXXXX)"
 echo "[post-edit] $test_fqcn 실행 중..." >&2
 
-if ./mvnw "${mvn_args[@]}" > "$log_file" 2>&1; then
+if "${run_cmd[@]}" > "$log_file" 2>&1; then
   echo "[post-edit] PASS: $test_fqcn" >&2
 else
   echo "[post-edit] 경고: $test_fqcn 실패 (작업은 차단하지 않음)." >&2

@@ -32,11 +32,21 @@ if git diff --cached --name-only 2>/dev/null | grep -qE '(^|/)\.env(\..*)?$'; th
 fi
 
 # 2) Checkstyle — 스테이징된 파일만이 아닌 프로젝트 전체 기준 (CLAUDE.md 명시 주의사항)
+checkstyle_cmd=()
+checkstyle_hint=""
 if [[ -x ./mvnw ]]; then
+  checkstyle_cmd=(./mvnw -q checkstyle:check)
+  checkstyle_hint="./mvnw checkstyle:check"
+elif [[ -x ./gradlew ]] && ./gradlew -q help --task checkstyleMain >/dev/null 2>&1; then
+  # Gradle은 checkstyle 플러그인이 적용된 프로젝트에서만 검사한다 (태스크 부재 시 건너뜀).
+  checkstyle_cmd=(./gradlew -q checkstyleMain checkstyleTest)
+  checkstyle_hint="./gradlew checkstyleMain checkstyleTest"
+fi
+if [[ ${#checkstyle_cmd[@]} -gt 0 ]]; then
   checkstyle_log="$(mktemp -t pre-commit-checkstyle.XXXXXX)"
-  if ! ./mvnw -q checkstyle:check > "$checkstyle_log" 2>&1; then
+  if ! "${checkstyle_cmd[@]}" > "$checkstyle_log" 2>&1; then
     echo "[pre-commit] 차단: Checkstyle 위반이 있습니다 (프로젝트 전체 기준)." >&2
-    echo "[pre-commit] 수정하지 않은 파일의 기존 위반도 커밋을 막을 수 있습니다. ./mvnw checkstyle:check 로 전체 현황을 먼저 확인하세요." >&2
+    echo "[pre-commit] 수정하지 않은 파일의 기존 위반도 커밋을 막을 수 있습니다. $checkstyle_hint 로 전체 현황을 먼저 확인하세요." >&2
     tail -n 30 "$checkstyle_log" >&2
     fail=1
   fi

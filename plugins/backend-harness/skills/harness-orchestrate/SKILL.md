@@ -6,7 +6,7 @@ description: >
   "기존 코드 검토" 요청 시 가장 먼저 이 스킬로 판단한다. 실제 구현/검토 실행은 harness-api-build,
   harness-full-review, 또는 단일 에이전트 호출에 위임하며 이 스킬 자체는 파일을 수정하지 않는다.
 allowed-tools: Read Grep Glob Bash(test:*)
-compatibility: Requires Java 17, Spring Boot 3.x project with Maven wrapper (./mvnw), git.
+compatibility: Requires Java 17+, Spring Boot 3.x+ (정확한 버전은 프로젝트 CLAUDE.md의 JAVA_VERSION/SPRING_BOOT_VERSION) project with Maven(./mvnw) 또는 Gradle(./gradlew) wrapper, git.
 ---
 
 # harness-orchestrate — 라우팅 결정 스킬

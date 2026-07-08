@@ -1,7 +1,7 @@
 ---
 name: qa-engineer
 description: "JUnit5·Mockito·AssertJ 기반 단위/통합 테스트를 생성하고 커버리지 갭을 분석하는 에이전트. api-developer 또는 code-quality 이후 호출되며, 신규/변경 코드에 대응하는 테스트 작성을 전담한다."
-tools: Read, Write, Edit, Grep, Glob, Bash(./mvnw test:*)
+tools: Read, Write, Edit, Grep, Glob, Bash(./mvnw test:*), Bash(./gradlew test:*)
 model: sonnet
 ---
 

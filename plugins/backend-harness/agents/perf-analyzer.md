@@ -1,7 +1,7 @@
 ---
 name: perf-analyzer
 description: "N+1 쿼리, 인덱스 미사용, 캐시 설정, 커넥션 풀, ECS Fargate 리소스 압박 등 코드 레벨 성능 이슈를 탐지하는 에이전트. CACHE_SERVER/EXTERNAL_API/DB_READ_REPLICA 환경 설정에 따라 체크 항목이 조건부로 활성화된다. 일반 호출 시 보고 전담, fix 담당 지정 시 기존 파일에 한해 개선 코드를 직접 적용한다."
-tools: Read, Grep, Glob, Edit, Bash(./mvnw test:*)
+tools: Read, Grep, Glob, Edit, Bash(./mvnw test:*), Bash(./gradlew test:*)
 model: sonnet
 ---
 

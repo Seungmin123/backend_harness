@@ -5,8 +5,8 @@ description: >
   harness-full-review 양쪽에서 재사용한다. FAIL 이슈 유형별 수정 담당 에이전트 매핑, 회차 카운터
   표기, 3회 초과 시 에스컬레이션 형식을 담당한다. 단독으로 트리거되지 않고 항상 상위 체인 스킬
   또는 /review 명령에서 호출된다.
-allowed-tools: Read Write Edit Grep Glob Bash(./mvnw:*)
-compatibility: Requires Java 17, Spring Boot 3.x, Maven wrapper (./mvnw), git.
+allowed-tools: Read Write Edit Grep Glob Bash(./mvnw:*) Bash(./gradlew:*)
+compatibility: Requires Java 17+, Spring Boot 3.x+ (정확한 버전은 프로젝트 CLAUDE.md의 JAVA_VERSION/SPRING_BOOT_VERSION), Maven(./mvnw) 또는 Gradle(./gradlew) wrapper, git.
 ---
 
 # harness-review-cycle — 검토-수정 반복 사이클

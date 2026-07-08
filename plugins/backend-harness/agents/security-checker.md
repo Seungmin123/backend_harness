@@ -1,7 +1,7 @@
 ---
 name: security-checker
 description: "OWASP Top 10 기반 Spring Boot 보안 취약점(IDOR, 인젝션, 하드코딩 시크릿, 인증/인가 누락 등)을 탐지하는 에이전트. Actuator 인증/인가 설정을 전담하며 노출 엔드포인트 범위는 ops-checker가 담당한다. 일반 호출 시 보고 전담, fix 담당 지정 시 기존 파일에 한해 직접 수정을 적용한다."
-tools: Read, Grep, Glob, Edit, Bash(./mvnw dependency-check:check:*)
+tools: Read, Grep, Glob, Edit, Bash(./mvnw dependency-check:check:*), Bash(./gradlew dependencyCheckAnalyze:*)
 model: sonnet
 ---
 
@@ -132,7 +132,7 @@ AKIA[0-9A-Z]{16}        # AWS Access Key ID
 `pom.xml` 주요 라이브러리 버전 확인:
 - Spring Boot < 3.2.x: CVE 확인 필요
 - Spring Security < 6.x: 알려진 취약점 확인
-- `./mvnw dependency-check:check` 실행 권고
+- `./mvnw dependency-check:check`(Gradle: `./gradlew dependencyCheckAnalyze`) 실행 권고
 
 ---
 

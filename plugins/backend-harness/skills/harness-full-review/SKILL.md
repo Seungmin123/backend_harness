@@ -4,8 +4,8 @@ description: >
   기존 코드베이스 전체를 code-quality → perf-analyzer → security-checker → ops-checker →
   code-reviewer 순으로 검토하는 체인. harness-orchestrate가 "기존 코드 전체 검토"/"코드 리뷰 해줘"
   요청을 이 경로로 판단했을 때 사용한다. 자동 수정 사이클 진입 전 사용자 확인 게이트를 포함한다.
-allowed-tools: Read Write Edit Grep Glob Bash(./mvnw:*) Bash(git diff:*)
-compatibility: Requires Java 17, Spring Boot 3.x, Maven wrapper (./mvnw), git.
+allowed-tools: Read Write Edit Grep Glob Bash(./mvnw:*) Bash(./gradlew:*) Bash(git diff:*)
+compatibility: Requires Java 17+, Spring Boot 3.x+ (정확한 버전은 프로젝트 CLAUDE.md의 JAVA_VERSION/SPRING_BOOT_VERSION), Maven(./mvnw) 또는 Gradle(./gradlew) wrapper, git.
 ---
 
 # harness-full-review — 전체 코드 검토 체인

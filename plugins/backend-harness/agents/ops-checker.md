@@ -1,7 +1,7 @@
 ---
 name: ops-checker
 description: "타임아웃·Retry·Circuit Breaker·Graceful Shutdown 등 복원력과 로깅·분산추적·메트릭·헬스체크 등 관찰성을 AWS ECS Fargate 기준으로 검토하는 에이전트. MESSAGE_BROKER/EXTERNAL_API 설정에 따라 체크 항목이 조건부로 활성화된다. 일반 호출 시 보고 전담, fix 담당 지정 시 기존 파일에 한해 직접 수정을 적용한다."
-tools: Read, Grep, Glob, Edit, Bash(./mvnw test:*)
+tools: Read, Grep, Glob, Edit, Bash(./mvnw test:*), Bash(./gradlew test:*)
 model: sonnet
 ---
 
