@@ -54,7 +54,7 @@ frontmatter의 `tools`를 그에 맞게 좁힌다.
 | 스킬 | 역할 |
 |---|---|
 | harness-orchestrate | 단일 호출/신규 API 체인/전체 검토 체인 라우팅 판단 |
-| harness-api-build | 신규 API 구축 체인 (api-developer→qa→security→ops→reviewer), chain-report.json 기록 |
+| harness-api-build | 신규 API 구축 체인 — TDD: 스켈레톤→테스트(RED)→구현(GREEN)→security→ops→reviewer, chain-report.json 기록 |
 | harness-full-review | 전체 코드 검토 체인, 자동 수정 진입 전 REVIEW GATE 사용자 확인 |
 | harness-bugfix | 버그 수정 체인 — 재현 테스트 먼저 작성(RED) → 수정 → 검증(GREEN) |
 | harness-review-cycle | FAIL 시 최대 3회 수정→재검토 루프, fix-owner 매핑, 에스컬레이션 |
@@ -115,15 +115,17 @@ frontmatter의 `tools`를 그에 맞게 좁힌다.
 1. **라우팅**: `harness-orchestrate`가 "신규 API 개발"로 판단 → `harness-api-build` 체인 시작.
 2. **Plan 게이트 (자동 통과 불가)**: `api-developer`가 Phase 1 Plan(엔드포인트 목록, 스키마,
    레이어 구조, 트랜잭션 경계, 인증 방식, 단계별 verify 기준)을 제시하고 **사용자 확인을
-   기다린다**. 여기서 승인해야 코드가 생성된다.
-3. **체인 실행**: `api-developer`(구현) → `qa-engineer`(테스트 생성) → `security-checker`(보안
-   검토 보고) → `ops-checker`(복원력·관찰성 검토 보고). 각 단계 산출물이 `chain-report.json`
-   (gitignore 대상)에 기록된다.
+   기다린다**. 여기서 승인해야 코드가 생성된다. Plan이 크면(엔드포인트 3개 초과 등) 분할안을
+   함께 제시한다(태스크 크기 게이트).
+3. **체인 실행 (TDD)**: `api-developer`(스켈레톤 — 컴파일만 되는 골격) → `qa-engineer`(Plan 기준
+   테스트 작성, **RED 확인** 후 `test: [RED]` 커밋) → `api-developer`(구현, **GREEN 확인** 후
+   `feat: [GREEN]` 커밋) → `security-checker`(보안 검토 보고) → `ops-checker`(복원력·관찰성 검토
+   보고). 각 단계 산출물이 `chain-report.json`(gitignore 대상)에 기록된다.
 4. **기계 검증 게이트**: `./mvnw test`(또는 `./gradlew test`)가 green이어야 다음 단계로 간다.
    red면 `code-reviewer`를 호출하지 않고 fix 담당이 먼저 수정한다.
 5. **최종 검토**: `code-reviewer`가 원본 요청 원문과 diff만 보고 독립 검토 —
    요구사항 커버리지, 컨벤션(`ApiResponse<T>` 등), 선행 에이전트의 HIGH 이상(CRITICAL 포함)
-   이슈 반영 여부, 테스트 충분성을 판정한다.
+   이슈 반영 여부, 테스트 충분성과 TDD 증거(`chain-report.json`의 `tdd.red_confirmed`)를 판정한다.
 6. **판정 분기**: `PASS`/`PASS_WITH_WARNINGS` → 완료 보고 후 종료.
    `FAIL` → `harness-review-cycle`이 이슈별 fix 담당을 호출하고 재검토 (최대 3회,
    FAIL 이슈는 `chain-report.json`의 `review_cycle.issues`에 구조화 기록).

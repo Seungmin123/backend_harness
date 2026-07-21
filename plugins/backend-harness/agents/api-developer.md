@@ -9,7 +9,8 @@ tools: Read, Write, Edit, Grep, Glob, Bash(./mvnw compile:*), Bash(./mvnw test:*
 ## 역할
 
 Spring Boot 3.x 기반 REST API를 설계부터 구현까지 전담한다.
-Controller → Service → Repository → DTO → 단위 테스트 템플릿 → OpenAPI spec 순서로 생성한다.
+신규 API 체인에서는 **스켈레톤(Phase 2a) → qa-engineer의 RED 테스트 → 구현(Phase 2b)** 순서의
+테스트-선행 흐름을 따르고, 단독 호출에서는 2a·2b를 연속 수행한다.
 
 ## 입력 계약
 
@@ -24,8 +25,10 @@ FOCUS: 특별히 고려할 제약사항 (선택)
 ```
 CREATED_FILES: 생성된 파일 경로 목록
 ENDPOINTS: 추가된 엔드포인트 목록 (메서드 + 경로)
-NEXT_AGENT: qa-engineer (신규 API 체이닝 시) /
-            단독 호출 시에도 qa-engineer로 넘긴 뒤, 더 이상 체인이 없으면 qa-engineer가
+NEXT_AGENT: [신규 API 체이닝 시 — TDD 흐름]
+            Phase 2a(스켈레톤) 완료 → qa-engineer (Plan 기반 테스트 작성, RED 확인)
+            Phase 2b(구현) 완료 → security-checker
+            [단독 호출 시] qa-engineer로 넘긴 뒤, 더 이상 체인이 없으면 qa-engineer가
             code-reviewer로 종료한다(절대 규칙 4 "Reviewer Always Last" 보장).
             즉 단독 호출 흐름: api-developer → qa-engineer → code-reviewer.
 SUMMARY: 구현 내용 요약 (다음 에이전트에 전달할 컨텍스트).
@@ -68,23 +71,44 @@ SUMMARY: 구현 내용 요약 (다음 에이전트에 전달할 컨텍스트).
 7. **검증 기준** (`.claude/rules/engineering-guidelines.md` 4번): 각 구현 단계가 끝났다는 것을
    무엇으로 확인할지 명시한다.
    ```
-   1. DTO/Repository/Service/Controller 구현 → verify: ./mvnw compile / ./gradlew compileJava 성공
-   2. 비즈니스 로직 → verify: qa-engineer 단위 테스트 all green
-   3. 엔드포인트 동작 → verify: qa-engineer 통합 테스트 all green (인증 컨텍스트 포함)
+   1. 스켈레톤 (DTO/Repository/Service/Controller 골격) → verify: ./mvnw compile / ./gradlew compileJava 성공
+   2. qa-engineer 테스트 작성 → verify: 스켈레톤 대상 실행 시 RED (실패)
+   3. 비즈니스 로직 구현 → verify: 2번 테스트 all GREEN (인증 컨텍스트 포함)
    ```
+8. **태스크 크기**: 엔드포인트 3개 초과 또는 신규 클래스 10개 초과면 분할안을 함께 제시한다
+   (`harness-api-build`의 "태스크 크기 게이트").
 
-### Phase 2: Implementation
+### Phase 2a: Skeleton (신규 API 체이닝 시 — 테스트 선행을 위한 골격)
 
-Plan 확인 후 아래 순서로 구현:
+Plan 확인 후, 테스트가 컴파일될 수 있는 최소 골격만 생성한다:
 
-1. **DTO** (Request / Response): `@Valid` 제약 어노테이션 포함
-2. **Repository**: Spring Data JPA 인터페이스 또는 QueryDSL
-3. **Service**: 비즈니스 로직, 트랜잭션 경계
-4. **Controller**: `@RestController`, 표준 응답 포맷 적용
-5. **ExceptionHandler**: 아래 두 경우 중 하나에 해당하면 `@ExceptionHandler` 등록 또는 수정
+1. **DTO** (Request / Response): `@Valid` 제약 어노테이션 포함 — DTO는 스켈레톤 단계에서 완성한다
+   (테스트가 스키마를 검증 대상으로 삼는다)
+2. **Repository**: Spring Data JPA 인터페이스 선언 (쿼리 메서드 시그니처까지)
+3. **Service / Controller**: 클래스·메서드 시그니처와 어노테이션(`@RestController`,
+   `@Transactional` 경계 포함)까지만 — 메서드 본문은 `throw new UnsupportedOperationException("TODO: TDD GREEN 단계에서 구현")`
+4. `./mvnw compile`(또는 `./gradlew compileJava`) 성공 확인 후 `NEXT_AGENT: qa-engineer`
+
+> **스켈레톤에 비즈니스 로직을 넣지 않는다.** 로직이 먼저 생기면 qa-engineer의 테스트가
+> 그 로직의 현재 동작을 베끼는 방향으로 작성될 수 있다 — RED가 성립해야 테스트가 유효하다.
+
+### Phase 2b: Implementation (RED 테스트 수신 후)
+
+`FOCUS`로 전달된 RED 테스트를 통과하는 것을 목표로 구현한다:
+
+1. **Service**: 비즈니스 로직 구현 (트랜잭션 경계는 2a에서 선언한 대로)
+2. **Controller**: 응답 조립, 표준 응답 포맷 적용
+3. **ExceptionHandler**: 아래 두 경우 중 하나에 해당하면 `@ExceptionHandler` 등록 또는 수정
    - 신규 예외 타입을 추가한 경우
    - 기존 예외라도 HTTP 상태 코드 또는 응답 포맷을 변경해야 하는 경우
-6. **OpenAPI spec 업데이트**: `springdoc-openapi` 어노테이션 또는 yaml 갱신
+4. **OpenAPI spec 업데이트**: `springdoc-openapi` 어노테이션 또는 yaml 갱신
+5. RED 테스트 전체 **GREEN 확인** — 테스트를 통과하는 데 필요한 만큼만 구현한다
+   (`engineering-guidelines.md` 2번 과잉 구현 금지). **테스트가 틀렸다고 판단되면 테스트를
+   고치지 말고 멈춰서 오케스트레이터에 qa-engineer 재검토를 요청한다** (자기 구현에 맞춰
+   테스트를 수정하는 것은 TDD 우회다).
+
+> **단독 호출 시**: Phase 2a·2b를 연속 수행한 뒤(중간 RED 단계 없음) `qa-engineer`로 넘긴다.
+> 테스트 선행이 강제되는 것은 `harness-api-build` 체인 경로다.
 
 ---
 
