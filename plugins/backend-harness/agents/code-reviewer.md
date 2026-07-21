@@ -69,6 +69,9 @@ SUMMARY: 전체 검토 결과 한 줄 요약
 
 **api-convention.md 준수 체크:**
 - [ ] URL: 복수형 명사, kebab-case, `/api/v{n}/` 버전 포함
+- [ ] 매핑: 핸들러 메서드는 HTTP 메서드 전용 어노테이션(`@GetMapping`/`@PostMapping`/`@PutMapping`/
+      `@PatchMapping`/`@DeleteMapping`)만 사용 — 메서드 레벨 `@RequestMapping` 금지,
+      클래스 레벨 `@RequestMapping`은 base path 전용
 - [ ] 응답: 성공·실패 모두 `ApiResponse<T>` 래퍼(`code` + `data`) 사용, Controller 반환 타입은
       `ApiResponse<구체DTO>` (raw 타입 금지)
 - [ ] 생성 방식: 정적 팩토리만 사용 (`success` / `of` / `error` — `new` 직접 생성 금지),

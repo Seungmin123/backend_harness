@@ -118,3 +118,23 @@ public class ApiResponse<T> {
 - ID: UUID v4 (순차 Long ID 외부 노출 금지)
 - 빈 목록: `null` 대신 `[]` 반환
 - 필드명: camelCase
+
+## API-06. 매핑 어노테이션
+
+- **핸들러 메서드**: HTTP 메서드 전용 어노테이션만 사용한다 —
+  `@GetMapping`, `@PostMapping`, `@PutMapping`, `@PatchMapping`, `@DeleteMapping`
+- **메서드 레벨 `@RequestMapping` 금지**: `@RequestMapping(method = RequestMethod.GET)` (X)
+  → `@GetMapping` (O). `method` 속성을 빠뜨리면 모든 HTTP 메서드에 매핑되는 사고를
+  막고, 핸들러의 의도가 시그니처만 봐도 드러난다.
+- **클래스 레벨 `@RequestMapping`**: 공통 base path 선언 용도로만 허용
+  (`@RequestMapping("/api/v1/users")`).
+
+```java
+@RestController
+@RequestMapping("/api/v1/users")   // 클래스 레벨 — base path 전용
+public class UserController {
+
+    @GetMapping("/{id}")           // 메서드 레벨 — 전용 어노테이션만
+    public ResponseEntity<ApiResponse<UserResponse>> getUser(@PathVariable UUID id) { ... }
+}
+```

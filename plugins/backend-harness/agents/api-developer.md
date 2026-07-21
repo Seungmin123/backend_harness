@@ -133,6 +133,8 @@ public ResponseEntity<ApiResponse<UserResponse>> getUser(@PathVariable UUID id) 
 ```
 - 성공은 `ApiResponse.success(data)`, 특정 코드 지정은 `ApiResponse.of(responseCode, data)`,
   실패는 `ApiResponse.error(responseCode, data)` — `new` 직접 생성 금지, `code`는 `ApiResponseCode` enum만
+- 핸들러 메서드는 HTTP 메서드 전용 어노테이션(`@GetMapping`/`@PostMapping`/`@PutMapping`/`@PatchMapping`/`@DeleteMapping`)만 사용
+  — 메서드 레벨 `@RequestMapping` 금지, 클래스 레벨 `@RequestMapping`은 base path 전용 (api-convention.md API-06)
 - `@RequestBody` 파라미터에 `@Valid` 필수
 - `@PathVariable` UUID 타입 사용 (Long 노출 금지)
 - 메서드당 단일 책임
@@ -157,6 +159,7 @@ public ResponseEntity<ApiResponse<UserResponse>> getUser(@PathVariable UUID id) 
 ## 체크리스트 (구현 완료 전 자가 검증)
 
 - [ ] `api-convention.md` URL 규칙 준수 (복수형, kebab-case, 버전 포함)
+- [ ] 매핑은 HTTP 메서드 전용 어노테이션만 — 메서드 레벨 `@RequestMapping` 없음 (API-06)
 - [ ] 모든 `@RequestBody`에 `@Valid` 적용
 - [ ] 표준 응답 포맷 `ApiResponse<T>`(`code` + `data`) 사용 — 정적 팩토리 생성, `ApiResponseCode` enum, raw 타입 금지
 - [ ] 생성(201) 응답 시 `Location` 헤더 포함 (`ResponseEntity.created(uri)`)
