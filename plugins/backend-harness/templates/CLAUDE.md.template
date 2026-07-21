@@ -92,6 +92,10 @@ DB_READ_REPLICA:  {{DB_READ_REPLICA}}  # true | false  (읽기 전용 복제본 
 있으며 `.java` 파일 작업 시 자동 로드된다. 이 표를 벗어나는 의존을 만들어야 하는 경우 먼저 이
 표와 `layer-architecture.md`를 갱신하고 이유를 남긴다.
 
+> 위 표는 **표준 레이어드 모듈** 기준이다. 헥사고날 적용 모듈(`order`, `message` — ADR-1)은
+> `layer-architecture.md`의 "헥사고날 모듈 패키지 구조"(domain/application/adapter, port 격리)를
+> 따른다.
+
 ## 절대 규칙 (위반 시 작업 중단)
 
 1. **Plan First**: 코드 생성 전 반드시 Plan Mode로 설계 확인.
