@@ -57,7 +57,7 @@ SUMMARY: 테스트 전략 요약
 `.claude/rules/testing-conventions.md`의 "통합 테스트 작성 전 필수 확인" 섹션을 따른다.
 
 **우선순위 1**: `api-developer`가 Phase 1에서 결정해 SUMMARY로 전달한 인증 방식(JWT/세션)과
-접근 권한이 CONTEXT에 있으면 이를 1차 근거로 삼는다(api-developer Phase 1 #6의 목적).
+접근 권한이 CONTEXT에 있으면 이를 1차 근거로 삼는다(api-developer Phase 1 #7의 목적).
 
 ---
 

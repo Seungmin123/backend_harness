@@ -128,8 +128,9 @@ frontmatter의 `tools`를 그에 맞게 좁힌다.
    함께 제시한다(태스크 크기 게이트).
 3. **체인 실행 (TDD)**: `api-developer`(스켈레톤 — 컴파일만 되는 골격) → `qa-engineer`(Plan 기준
    테스트 작성, **RED 확인** 후 `test: [RED]` 커밋) → `api-developer`(구현, **GREEN 확인** 후
-   `feat: [GREEN]` 커밋) → `security-checker`(보안 검토 보고) → `ops-checker`(복원력·관찰성 검토
-   보고). 각 단계 산출물이 `chain-report.json`(gitignore 대상)에 기록된다.
+   `feat: [GREEN]` 커밋) → `security-checker` + `ops-checker` 병렬 검토 보고 (`CACHE_SERVER ≠ none`
+   또는 `DB_READ_REPLICA: true`면 `perf-analyzer`도 포함). 각 단계 산출물이
+   `chain-report.json`(gitignore 대상)에 기록된다.
 4. **기계 검증 게이트**: `./mvnw test`(또는 `./gradlew test`)가 green이어야 다음 단계로 간다.
    red면 `code-reviewer`를 호출하지 않고 fix 담당이 먼저 수정한다.
 5. **최종 검토**: `code-reviewer`가 원본 요청 원문과 diff만 보고 독립 검토 —

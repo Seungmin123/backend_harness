@@ -223,8 +223,10 @@ FOCUS: {이번 에이전트가 집중할 부분}
 ```
 
 > **`PRIOR_AGENTS` 작성 규칙**: `code-reviewer`를 체이닝으로 호출할 때만 포함한다.
-> 단독 호출이면 생략한다. 목록에는 해당 체인에서 **실제로 실행된** 보고 전담 에이전트만 기재한다.
+> 단독 호출이면 생략한다. 목록에는 해당 체인에서 **실제로 실행·완주한** 보고 전담 에이전트만
+> 기재한다 (크래시로 건너뛴 에이전트는 제외 — "병렬 실행과 실행 실패 처리" 참조).
 > - 신규 API 체인: `PRIOR_AGENTS: security-checker, ops-checker`
+>   (+ `perf-analyzer` — `CACHE_SERVER ≠ none` 또는 `DB_READ_REPLICA: true`로 편입된 경우)
 > - 전체 검토 체인: `PRIOR_AGENTS: code-quality, perf-analyzer, security-checker, ops-checker`
 
 ## 병렬 실행과 실행 실패 처리 (전 체인 공통)
