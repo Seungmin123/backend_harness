@@ -1,6 +1,6 @@
 {
   "name": "backend-harness",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Java/Spring Boot 백엔드 하네스 — 전문 에이전트 7종, 체인 스킬 5종, 안전 훅 3종(git-guard/post-edit/pre-commit), /harness-init 프로젝트 스캐폴딩",
   "author": { "name": "Seungmin123", "email": "dltmdals147@gmail.com" }
 }

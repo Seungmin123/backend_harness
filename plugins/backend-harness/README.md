@@ -61,15 +61,20 @@ frontmatter의 `tools`를 그에 맞게 좁힌다.
 
 ## 규칙 파일 참조 (rules/)
 
-| 규칙 | 파일 | `paths:` 범위 |
-|---|---|---|
-| API 설계 기준 | `api-convention.md` | Controller/Request/Response/ExceptionHandler |
-| 보안 정책 | `security-policy.md` | 전체 `.java`, `application*.yml`/`.properties` |
-| 레이어 아키텍처 | `layer-architecture.md` | 전체 `.java` |
-| 복원력·관찰성 표준 설정 | `resilience-observability.md` | 전체 `.java`, `application*.yml`/`.properties` |
-| 성능·JPA, DB 마이그레이션 안전성 | `performance-jpa.md` | 전체 `.java`, `application*.yml`, `db/migration/**`, `db/changelog/**` |
-| 테스트 작성 컨벤션 | `testing-conventions.md` | `src/test/java/**/*.java` |
-| 엔지니어링 행동 규범 (Karpathy 기반) | `engineering-guidelines.md` | 전체 `.java` (main+test) |
+| 규칙 | 파일 | rule ID | `paths:` 범위 |
+|---|---|---|---|
+| API 설계 기준 | `api-convention.md` | `API-xx` | Controller/Request/Response/ExceptionHandler |
+| 보안 정책 | `security-policy.md` | `SEC-xx` | 전체 `.java`, `application*.yml`/`.properties` |
+| 레이어 아키텍처 | `layer-architecture.md` | `LAYER-xx` | 전체 `.java` |
+| 복원력·관찰성 표준 설정 | `resilience-observability.md` | `RES-xx`/`OBS-xx` | 전체 `.java`, `application*.yml`/`.properties` |
+| 성능·JPA, DB 마이그레이션 안전성 | `performance-jpa.md` | `PERF-xx` | 전체 `.java`, `application*.yml`, `db/migration/**`, `db/changelog/**` |
+| 테스트 작성 컨벤션 | `testing-conventions.md` | `TEST-xx` | `src/test/java/**/*.java` |
+| 엔지니어링 행동 규범 (Karpathy 기반) | `engineering-guidelines.md` | `ENG-01~04` | 전체 `.java` (main+test) |
+
+**rule ID 규약**: 각 규칙 파일의 `##` 섹션 헤더에 ID가 붙어 있다. 에이전트의 이슈 보고는
+위반한 rule ID를 인용한다 — 규칙이 개정돼도 어느 조항 위반인지 추적이 유지되고, rule 개정 시
+해당 ID를 인용하는 에이전트를 grep으로 찾을 수 있다(하네스 개선 절차 2번). 어떤 rule에도
+해당하지 않는 일반 판단 이슈는 `GEN`으로 표기한다. 섹션을 삭제해도 ID는 재사용하지 않는다.
 
 > **데이터 기반 근거 보강 (TODO)**: 실제 코드 리뷰·장애 회고 데이터가 쌓이면 각 rule의
 > `description`에 근거(예: "PR N건에서 지적된 항목")를 추가해 우선순위 판단 근거로 삼는다.
@@ -80,11 +85,15 @@ frontmatter의 `tools`를 그에 맞게 좁힌다.
   즉시 차단 — `git reset --hard`, force push, `git clean -f*`, `rm -rf`, `DROP TABLE` 등.
   확인 후 진행 — `commit --amend`, `rebase`, `branch -D`, `flyway:migrate` 등.
 - **pre-commit** (`PreToolUse`, `git commit`만): `.env` 스테이징 → Checkstyle(전체 프로젝트) →
-  하드코딩 시크릿(스테이징 변경분) 순서. 하나라도 실패하면 커밋 차단(exit 2).
+  TDD `[RED]` 커밋 정합(테스트 파일만 포함) → 하드코딩 시크릿(스테이징 변경분) 순서.
+  하나라도 실패하면 커밋 차단(exit 2).
 - **post-edit** (`PostToolUse`, Edit|Write): `.java` 편집 후 대응 테스트 자동 실행.
-  실패해도 차단하지 않고 경고만(exit 0 고정). 멀티모듈이면 `-pl <모듈>`로 해당 모듈만 실행.
+  실패 시 **오류로 승격(exit 2)** — 단 TDD 사이클 진행 중(`chain-report.json`의
+  `tdd.green_confirmed != true`)이면 RED가 정상이므로 경고만. 멀티모듈이면 `-pl <모듈>`로
+  해당 모듈만 실행.
 
-세 훅 모두 **jq가 없으면 조용히 통과**한다. `/harness-init`이 사전 점검에서 이를 확인한다.
+세 훅 모두 **jq가 없으면 검사 없이 통과**한다(stderr 경고는 출력). `/harness-init`이 사전
+점검에서 이를 확인한다.
 훅은 Claude Code 세션만 보호하며, Codex/Gemini 등 다른 도구에서는 AGENTS.md 문서 경고에만 의존한다.
 
 ## 하네스 개선 절차

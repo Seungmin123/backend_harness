@@ -11,7 +11,7 @@ paths:
 `EXTERNAL_API` 등 운영 환경 설정에 따라 관련 섹션만 적용한다(활성화 기준은 `CLAUDE.md`의
 "운영 환경 설정" 참조). Graceful Shutdown, 로깅, 분산 추적, 메트릭, 헬스체크는 항상 적용한다.
 
-## 타임아웃 〔`EXTERNAL_API: true`〕
+## RES-01. 타임아웃 〔`EXTERNAL_API: true`〕
 
 ```java
 // RestTemplate
@@ -26,7 +26,7 @@ webClient.get()
     .timeout(Duration.ofSeconds(10));
 ```
 
-## Retry 〔`EXTERNAL_API: true`〕
+## RES-02. Retry 〔`EXTERNAL_API: true`〕
 
 ```yaml
 # application.yml
@@ -51,7 +51,7 @@ resilience4j.retry:
 > `$` 포함 클래스명은 따옴표 필수). 클래스명 검증 책임 소재는 `ops-checker` 에이전트
 > (backend-harness 플러그인 제공)의 "Retry" 섹션을 따른다.
 
-## Circuit Breaker 〔`EXTERNAL_API: true`〕
+## RES-03. Circuit Breaker 〔`EXTERNAL_API: true`〕
 
 ```yaml
 resilience4j.circuitbreaker:
@@ -67,7 +67,7 @@ resilience4j.bulkhead:
       maxConcurrentCalls: 10
 ```
 
-## Graceful Shutdown (ECS 배포 필수, 항상 적용)
+## RES-04. Graceful Shutdown (ECS 배포 필수, 항상 적용)
 
 ```yaml
 # application.yml
@@ -82,7 +82,7 @@ spring:
 - ALB Target Group `deregistrationDelay`: 커넥션 드레이닝 충분한지 (기본 300초, 불필요하면 단축 가능)
 - SIGTERM 수신 후 새 요청 거부 + 진행 중 요청 완료 보장
 
-## 로깅 (구조화 로그, CloudWatch 최적화)
+## OBS-01. 로깅 (구조화 로그, CloudWatch 최적화)
 
 ```java
 // 권장: JSON 구조화 로그 (logstash-logback-encoder 사용)
@@ -93,7 +93,7 @@ log.info("Order created", kv("orderId", order.getId()), kv("userId", userId));
 - 패스워드/토큰/API 키/DTO 전체 `toString()` 로그 출력 금지
 - `DEBUG` 레벨 로그를 운영 코드에 과도하게 남기지 않는다 (CloudWatch 비용 증가)
 
-## 분산 추적 (MDC)
+## OBS-02. 분산 추적 (MDC)
 
 ```java
 // 필수: 요청 진입 시 MDC 설정 (OncePerRequestFilter 기반)
@@ -105,7 +105,7 @@ MDC.put("userId", getCurrentUserId());
 - `RestTemplate` / `WebClient` 호출 시 `X-Trace-Id` 헤더 전달
 - `@Async` 비동기 메서드는 `MDC.getCopyOfContextMap()`으로 컨텍스트 복사
 
-## 메트릭 (Micrometer)
+## OBS-03. 메트릭 (Micrometer)
 
 ```java
 @Timed(value = "order.create", description = "주문 생성 처리 시간")
@@ -115,7 +115,7 @@ public OrderResponse createOrder(OrderRequest request) { ... }
 비즈니스 핵심 지표(주문 생성/실패 수, 결제 처리 시간, 외부 API 성공/실패 비율)에
 `Counter`/`Gauge`/`Timer`를 둔다.
 
-## 헬스체크 (Actuator, ECS Fargate)
+## OBS-04. 헬스체크 (Actuator, ECS Fargate)
 
 ```yaml
 management:
@@ -129,7 +129,7 @@ management:
 - ECS Task Definition 헬스체크 `startPeriod` 60초 권장 (Cold Start 고려)
 - `/actuator/**` 인증/인가 설정은 이 표준이 아니라 `security-checker` 에이전트(backend-harness 플러그인 제공)가 검토한다.
 
-## Kafka / SQS 운용 기준
+## RES-05. Kafka / SQS 운용 기준
 
 `MESSAGE_BROKER: kafka` / `sqs` / `kafka+sqs`일 때의 멱등성·DLQ·Trace ID 전파·가시성 타임아웃 등
 세부 기준은 대부분의 프로젝트에 해당하지 않으므로 여기 옮기지 않고

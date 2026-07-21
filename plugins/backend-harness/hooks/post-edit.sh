@@ -2,11 +2,16 @@
 # PostToolUse hook — matcher: Edit|Write (등록: backend-harness 플러그인 hooks/hooks.json)
 #
 # .java 파일 편집 후 대응하는 테스트를 자동 실행한다. CLAUDE.md에 명시된 대로
-# .java 파일 변경만 감지하며, 테스트 실패 시에도 작업을 차단하지 않고 경고만 출력한다(exit 0 고정).
+# .java 파일 변경만 감지한다.
 #
-# 체이닝 실행 중(api-developer → qa-engineer) 경고: 이 스크립트는 체이닝 여부를 알 수 없으므로
-# 항상 경고를 출력한다 — 체이닝 중이면 CLAUDE.md 지시에 따라 오케스트레이터(모델)가 이 경고를
-# 무시하고 계속 진행한다. 이는 이 스크립트가 아니라 CLAUDE.md 레벨의 규칙이다.
+# 테스트 실패 시 처리 (2단계):
+#   - TDD 사이클 진행 중(chain-report.json의 .tdd가 있고 green_confirmed != true)이면
+#     RED 상태가 정상이므로 경고만 출력한다(exit 0).
+#   - 그 외에는 exit 2로 실패를 오류로 승격한다 — PostToolUse이므로 편집 자체는 이미 적용된
+#     상태지만, stderr가 모델에 오류로 전달되어 "경고 무시하고 진행"이 불가능해진다.
+#
+# 대응 테스트 파일이 없는 경우의 경고: 체이닝 중이면 CLAUDE.md 지시에 따라 오케스트레이터(모델)가
+# 이 경고를 무시하고 계속 진행한다. 이는 이 스크립트가 아니라 CLAUDE.md 레벨의 규칙이다.
 set -uo pipefail
 
 input="$(cat)"
@@ -86,10 +91,24 @@ echo "[post-edit] $test_fqcn 실행 중..." >&2
 
 if "${run_cmd[@]}" > "$log_file" 2>&1; then
   echo "[post-edit] PASS: $test_fqcn" >&2
-else
-  echo "[post-edit] 경고: $test_fqcn 실패 (작업은 차단하지 않음)." >&2
-  tail -n 20 "$log_file" >&2
+  rm -f "$log_file"
+  exit 0
 fi
-rm -f "$log_file"
 
-exit 0
+# 실패 — TDD 사이클 진행 중이면 RED가 정상 상태이므로 경고만, 그 외에는 오류로 승격(exit 2)
+tdd_in_progress="false"
+if [[ -f chain-report.json ]]; then
+  tdd_in_progress="$(jq -r 'if (.tdd != null) and (.tdd.green_confirmed != true) then "true" else "false" end' chain-report.json 2>/dev/null || echo "false")"
+fi
+
+if [[ "$tdd_in_progress" == "true" ]]; then
+  echo "[post-edit] $test_fqcn 실패 — TDD RED→GREEN 사이클 진행 중이므로 차단하지 않습니다." >&2
+  tail -n 20 "$log_file" >&2
+  rm -f "$log_file"
+  exit 0
+fi
+
+echo "[post-edit] 오류: $test_fqcn 실패. 이 편집으로 테스트가 깨졌습니다 — 다음 작업 전에 해결하세요." >&2
+tail -n 20 "$log_file" >&2
+rm -f "$log_file"
+exit 2

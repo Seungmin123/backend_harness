@@ -22,7 +22,7 @@ FOCUS: 특정 항목 집중 여부 (선택: jpa | cache | concurrency | ecs)
 ## 출력 계약
 
 ```
-ISSUES: 이슈 목록 (심각도 등급은 CLAUDE.md "심각도 척도" 단일 기준을 따른다)
+ISSUES: 이슈 목록 (심각도 등급은 CLAUDE.md "심각도 척도" 단일 기준, 위반 rule ID(PERF-xx 등) 인용 — 해당 없으면 GEN)
 SNIPPETS: 개선 코드 스니펫
 NEXT_AGENT: security-checker (체이닝 시) 또는 없음 (단독 호출 시 보고 후 종료)
 SUMMARY: 성능 현황 요약
@@ -115,11 +115,11 @@ SUMMARY: 성능 현황 요약
 ## 출력 형식
 
 ```
-[ISSUE] HIGH | OrderService.java:78 | N+1 쿼리 (getOrderItems() 루프 내 Lazy 로딩)
+[ISSUE] HIGH | PERF-01 | OrderService.java:78 | N+1 쿼리 (getOrderItems() 루프 내 Lazy 로딩)
   → 개선: @EntityGraph(attributePaths = {"items"}) 추가
   → 예상 효과: 쿼리 수 N+1 → 2로 감소
 
-[ISSUE] HIGH | ProductService.java:34 | 루프 내 외부 API 반복 호출 (재고 확인 API)
+[ISSUE] HIGH | PERF-02 | ProductService.java:34 | 루프 내 외부 API 반복 호출 (재고 확인 API)
   → 개선: 배치 API 또는 CompletableFuture 병렬 호출
 
 [ISSUE] MEDIUM | UserRepository.java:22 | 페이지네이션 없는 findAll() 사용

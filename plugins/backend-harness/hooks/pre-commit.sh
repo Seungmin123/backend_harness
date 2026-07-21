@@ -2,8 +2,8 @@
 # PreToolUse hook — matcher: Bash (등록: backend-harness 플러그인 hooks/hooks.json)
 #
 # Bash 호출 커맨드가 git commit인 경우에만 개입한다. .env 스테이징 감지 → Checkstyle
-# (프로젝트 전체 기준) → 하드코딩 시크릿 탐지(스테이징된 변경분 기준) 순서로 실행하고,
-# 하나라도 실패하면 커밋을 차단한다.
+# (프로젝트 전체 기준) → TDD [RED] 커밋 정합(테스트 파일만 포함) → 하드코딩 시크릿 탐지
+# (스테이징된 변경분 기준) 순서로 실행하고, 하나라도 실패하면 커밋을 차단한다.
 #
 # exit 0 = 허용, exit 2 = 차단 (stderr 메시지가 Claude에게 차단 사유로 전달됨)
 set -uo pipefail
@@ -11,6 +11,7 @@ set -uo pipefail
 input="$(cat)"
 
 if ! command -v jq >/dev/null 2>&1; then
+  echo "[pre-commit] 경고: jq가 없어 커밋 검사(시크릿·Checkstyle·.env)가 동작하지 않습니다 (brew install jq)." >&2
   exit 0
 fi
 
@@ -53,7 +54,22 @@ if [[ ${#checkstyle_cmd[@]} -gt 0 ]]; then
   rm -f "$checkstyle_log"
 fi
 
-# 3) 하드코딩 시크릿 탐지 — 스테이징된 변경분(diff) 기준 (security-checker.md 패턴과 동일)
+# 3) TDD RED 커밋 정합 — 커밋 메시지에 [RED]가 있으면 테스트 파일만 포함되어야 한다
+#    (harness-api-build/harness-bugfix의 RED 커밋 규약: RED 증거 커밋에 구현이 섞이면 무효)
+if [[ "$command_str" == *"[RED]"* ]]; then
+  staged_main="$(git diff --cached --name-only 2>/dev/null | grep -E '(^|/)src/main/' || true)"
+  if [[ -n "$staged_main" ]]; then
+    echo "[pre-commit] 차단: [RED] 커밋에 src/main 파일이 포함되어 있습니다 — RED 커밋은 테스트 파일만 담아야 합니다." >&2
+    echo "$staged_main" | sed 's/^/  - /' >&2
+    fail=1
+  fi
+  if ! git diff --cached --name-only 2>/dev/null | grep -qE '(^|/)src/test/'; then
+    echo "[pre-commit] 차단: [RED] 커밋인데 src/test 파일이 없습니다." >&2
+    fail=1
+  fi
+fi
+
+# 4) 하드코딩 시크릿 탐지 — 스테이징된 변경분(diff) 기준 (security-checker.md 패턴과 동일)
 secret_pattern='password[[:space:]]*=[[:space:]]*["'"'"'][^$\{]|api[._-]?key[[:space:]]*=[[:space:]]*["'"'"'][^$\{]|secret[[:space:]]*=[[:space:]]*["'"'"'][^$\{]|-----BEGIN (RSA |EC )?PRIVATE KEY-----|AKIA[0-9A-Z]{16}'
 if git diff --cached 2>/dev/null | grep -qE "$secret_pattern"; then
   echo "[pre-commit] 차단: 스테이징된 변경분에서 하드코딩된 시크릿으로 의심되는 패턴이 발견되었습니다." >&2

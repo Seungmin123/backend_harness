@@ -23,7 +23,7 @@ FOCUS: 특정 항목 집중 여부 (선택)
 ## 출력 계약
 
 ```
-ISSUES: 이슈 목록 (아래 형식)
+ISSUES: 이슈 목록 (아래 형식 — 위반 rule ID(LAYER-xx/ENG-xx 등)를 인용, 해당 없으면 GEN)
 REFACTOR_PRIORITY: HIGH/MEDIUM/LOW 분류된 리팩토링 목록 (등급은 CLAUDE.md "심각도 척도" 단일 기준을 따른다)
 NEXT_AGENT: perf-analyzer (전체 검토 체이닝 시) 또는 없음 (단독 호출 시 보고 후 종료)
 SUMMARY: 품질 현황 요약
@@ -72,8 +72,8 @@ SUMMARY: 품질 현황 요약
 ## 출력 형식
 
 ```
-[ISSUE] HIGH | UserService.java:142 | God Class (412줄) → OrderService 분리 권고
-[ISSUE] HIGH | ProductController.java:87 | 레이어 경계 위반 (ProductRepository 직접 주입)
+[ISSUE] HIGH | GEN | UserService.java:142 | God Class (412줄) → OrderService 분리 권고
+[ISSUE] HIGH | LAYER-01 | ProductController.java:87 | 레이어 경계 위반 (ProductRepository 직접 주입)
 [ISSUE] MEDIUM | OrderService.java:55 | 순환복잡도 13 (processOrder 메서드)
 [ISSUE] MEDIUM | UserService.java:23 | 필드 주입(@Autowired) → 생성자 주입 전환 필요
 [ISSUE] LOW | ItemRepository.java:34 | 중복 쿼리 (findByStatusAndType이 3곳에서 복사)

@@ -9,17 +9,17 @@ paths:
 
 # 성능·JPA 표준 설정
 
-## N+1 쿼리 방지
+## PERF-01. N+1 쿼리 방지
 
 - `@OneToMany`/`@ManyToOne` Lazy 로딩 후 루프 내 즉시 반복 접근 금지
 - 개선: `@EntityGraph`, fetch join, `@BatchSize`
 
-## 인덱스 / 대용량 조회
+## PERF-02. 인덱스 / 대용량 조회
 
 - JPQL/QueryDSL `WHERE` 조건 컬럼에 `@Index` 적용, `LIKE '%keyword%'`(풀스캔) 지양
 - `findAll()` 또는 페이지네이션 없는 목록 조회 금지 — cursor 기반 페이지네이션 사용
 
-## 캐시 〔`CACHE_SERVER ≠ none`〕
+## PERF-03. 캐시 〔`CACHE_SERVER ≠ none`〕
 
 공통 (redis / caffeine / redis+caffeine):
 - 변경 빈도 낮고 조회 빈도 높은 메서드에 `@Cacheable` 적용, 데이터 변경 시 `@CacheEvict` 동반
@@ -34,7 +34,7 @@ paths:
 - `expireAfterWrite` / `expireAfterAccess` 설정
 - 다중 인스턴스 환경에서는 캐시 정합성 전략 필요 (Redis+Caffeine 이중 캐시 또는 무효화 이벤트)
 
-## Connection Pool (HikariCP)
+## PERF-04. Connection Pool (HikariCP)
 
 - 이론적 기준 공식(`(CPU 코어 수 × 2) + 유효 스핀들 수`)은 Fargate의 네트워크 연결 스토리지
   특성상 과소 산정되므로 상한 가늠용으로만 참고한다.
@@ -48,7 +48,7 @@ paths:
   (`AbstractRoutingDataSource` 또는 `LazyConnectionDataSourceProxy`)
 - 읽기/쓰기 풀 크기를 트래픽 비율에 맞게 분리
 
-## ECS Fargate 특화
+## PERF-05. ECS Fargate 특화
 
 - 대용량 객체 반복 생성, 루프 내 문자열 연결(`+`) 대신 `StringBuilder`/`String.join()` 사용
   (태스크 메모리 압박 방지)
@@ -57,12 +57,12 @@ paths:
   (셧다운 설정 자체는 `.claude/rules/resilience-observability.md` 및 `ops-checker` 담당,
   여기서는 성능 영향만 다룬다)
 
-## JVM
+## PERF-06. JVM
 
 - 루프 내 불필요한 객체 생성 금지
 - `Stream.collect(Collectors.toList())` 대신 `toList()` 사용 (Java 16+, 불변 리스트)
 
-## DB 마이그레이션 안전성 〔Flyway/Liquibase 사용 시〕
+## PERF-07. DB 마이그레이션 안전성 〔Flyway/Liquibase 사용 시〕
 
 Entity 변경이 스키마 변경을 수반하면 이 체크리스트를 함께 확인한다. 운영 DB는 `ddl-auto: none`
 (또는 `validate`)이 기본이므로 Hibernate 자동 스키마 생성에 의존하지 않고 마이그레이션

@@ -30,7 +30,7 @@ FOCUS: 특정 영역 집중 여부 (선택: timeout | retry | circuit-breaker | 
 ## 출력 계약
 
 ```
-ISSUES: 이슈 목록 (심각도 등급은 CLAUDE.md "심각도 척도" 단일 기준을 따른다)
+ISSUES: 이슈 목록 (심각도 등급은 CLAUDE.md "심각도 척도" 단일 기준, 위반 rule ID(RES-xx/OBS-xx 등) 인용 — 해당 없으면 GEN)
 SNIPPETS: Resilience4j 설정 예시, 권장 구현 코드
 NEXT_AGENT: code-reviewer (체이닝 시) 또는 없음 (단독 호출 시 보고 후 종료)
 SUMMARY: 복원력·관찰 가능성 현황 요약
@@ -278,22 +278,22 @@ public class RedisHealthIndicator implements HealthIndicator {
 ## 출력 형식
 
 ```
-[ISSUE] HIGH | PaymentClient.java:34 | [복원력] RestTemplate 타임아웃 미설정 (무한 대기 가능)
+[ISSUE] HIGH | RES-01 | PaymentClient.java:34 | [복원력] RestTemplate 타임아웃 미설정 (무한 대기 가능)
   → 개선: connectTimeout=3s, readTimeout=10s 설정
 
-[ISSUE] HIGH | OrderService.java:78 | [복원력] 트랜잭션 내 외부 결제 API 호출 (데이터 불일치 위험)
+[ISSUE] HIGH | RES-01 | OrderService.java:78 | [복원력] 트랜잭션 내 외부 결제 API 호출 (데이터 불일치 위험)
   → 개선: Outbox Pattern 적용 또는 트랜잭션 분리 후 보상 트랜잭션
 
-[ISSUE] HIGH | application.yml | [복원력] server.shutdown=graceful 미설정 (ECS 배포 시 요청 유실)
+[ISSUE] HIGH | RES-04 | application.yml | [복원력] server.shutdown=graceful 미설정 (ECS 배포 시 요청 유실)
   → 개선: graceful shutdown + timeout-per-shutdown-phase 설정
 
 [ISSUE] MEDIUM | ExternalApiService.java | [복원력] Circuit Breaker 미적용 (장애 전파 위험)
   → 개선: @CircuitBreaker + Fallback 메서드 추가
 
-[ISSUE] HIGH | PaymentService.java:89 | [관찰성] @Async 메서드에서 예외 로그 누락
+[ISSUE] HIGH | OBS-01 | PaymentService.java:89 | [관찰성] @Async 메서드에서 예외 로그 누락
   → 권장: AsyncUncaughtExceptionHandler 구현 또는 try-catch 추가
 
-[ISSUE] HIGH | ApiClient.java:45 | [관찰성] RestTemplate 외부 호출 시 Trace ID 헤더 미전달
+[ISSUE] HIGH | OBS-02 | ApiClient.java:45 | [관찰성] RestTemplate 외부 호출 시 Trace ID 헤더 미전달
   → 권장: ClientHttpRequestInterceptor로 MDC traceId 헤더 자동 주입
 
 [ISSUE] MEDIUM | OrderService.java | [관찰성] 주문 생성/실패 카운터 메트릭 누락

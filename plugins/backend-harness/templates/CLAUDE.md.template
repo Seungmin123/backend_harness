@@ -140,11 +140,14 @@ git-guard(위험 git/DB 명령 차단·확인) → pre-commit(.env·Checkstyle·
 post-edit(.java 편집 시 대응 테스트 자동 실행)이 플러그인 설치와 함께 자동 등록된다.
 알아둘 주의사항:
 
-- **jq 필수** — 미설치 시 훅이 조용히 통과한다(차단하지 않음).
+- **jq 필수** — 미설치 시 훅이 검사 없이 통과한다(경고는 출력되지만 차단하지 않음).
 - **pre-commit의 Checkstyle은 프로젝트 전체 기준** — 수정하지 않은 파일의 기존 위반도 커밋을
   막을 수 있다. 위반이 있다면 코드 스타일 검사 명령(위 표)으로 먼저 전체 현황을 파악할 것.
+  `[RED]` 커밋은 테스트 파일만 포함해야 통과한다(TDD 커밋 규약 검사).
 - **post-edit은 `.java` 변경만 감지** — `application.yml` 등 설정 변경 후에는 전체 테스트(위 표)를
-  수동 실행하거나 `qa-engineer`를 직접 호출한다. 체이닝 실행 중에는 post-edit의 "qa-engineer
+  수동 실행하거나 `qa-engineer`를 직접 호출한다. 대응 테스트 **실패는 오류(exit 2)로 승격**된다 —
+  단, TDD 사이클 진행 중(`chain-report.json`의 `tdd.green_confirmed`가 아직 true가 아님)이면
+  RED가 정상 상태이므로 경고만 출력한다. 체이닝 실행 중에는 post-edit의 "qa-engineer
   호출 안내" 경고를 오케스트레이터(모델)가 무시하고 진행한다.
 - **hooks는 Claude Code 세션만 보호한다.** Codex/Gemini 등 `AGENTS.md`를 읽는 다른 도구로
   작업할 때는 훅이 실행되지 않는다. 핵심 원칙: 커밋 되돌리기는 `git revert`만 사용하고,
@@ -224,6 +227,20 @@ FOCUS: {이번 에이전트가 집중할 부분}
 > - 신규 API 체인: `PRIOR_AGENTS: security-checker, ops-checker`
 > - 전체 검토 체인: `PRIOR_AGENTS: code-quality, perf-analyzer, security-checker, ops-checker`
 
+## 병렬 실행과 실행 실패 처리 (전 체인 공통)
+
+- **병렬 dispatch**: 보고 전담 에이전트는 파일을 수정하지 않으므로 상호 독립이다 — 체인에서
+  연속으로 배치된 보고 전담 구간(전체 검토 체인의 4종, 신규 API 체인의 security+ops)은
+  **병렬로 실행**한다. 생산 에이전트(`api-developer`/`qa-engineer`)와 `code-reviewer`는
+  선행 산출물에 의존하므로 순차 실행한다.
+- **실행 실패(크래시) 처리**: 에이전트가 출력 계약을 채우지 못하고 종료하면 **동일 입력으로
+  1회 재시도**한다. 재실패 시 해당 에이전트를 건너뛰되 반드시:
+  1. `chain-report.json`의 `steps`에 `"status": "failed"`로 기록하고,
+  2. `PRIOR_AGENTS`에서 제외하고 (code-reviewer Step 2.5 검증 대상에서 빠진다),
+  3. 완료 보고에 `미실행: {agent} (2회 실패)`를 명시해 **해당 영역이 검토되지 않았음을
+     사용자에게 알린다.**
+  실패를 조용히 삼키고 "이상 없음"으로 보고하는 것은 금지한다 — 미검토와 무결점은 다르다.
+
 ## 에이전트 간 역할 경계 (중복 탐지 방지)
 
 | 항목 | 담당 에이전트 |
@@ -240,3 +257,6 @@ API 설계(`api-convention.md`), 보안(`security-policy.md`), 레이어(`layer-
 테스트(`testing-conventions.md`), 엔지니어링 행동 규범(`engineering-guidelines.md`) —
 각 파일의 `paths:` 조건에 따라 해당 파일 작업 시 자동 로드된다. **원본은 플러그인 저장소이며**,
 프로젝트 사본을 수정했다면 플러그인 저장소에도 PR로 반영해 드리프트를 막는다.
+
+각 규칙 조항에는 rule ID(`API-xx`/`SEC-xx`/`LAYER-xx`/`RES-xx`/`OBS-xx`/`PERF-xx`/`TEST-xx`/`ENG-xx`)가
+있으며, **에이전트의 이슈 보고는 위반 rule ID를 인용한다** (해당 rule 없으면 `GEN`).

@@ -25,6 +25,7 @@ ask() {
 }
 
 if ! command -v jq >/dev/null 2>&1; then
+  echo "[git-guard] 경고: jq가 없어 위험 명령 가드가 동작하지 않습니다 (brew install jq). 파괴적 git/DB 명령이 차단되지 않는 상태입니다." >&2
   exit 0
 fi
 

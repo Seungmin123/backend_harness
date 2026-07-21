@@ -26,7 +26,7 @@ FOCUS: 특정 OWASP 항목 집중 여부 (선택)
 ## 출력 계약
 
 ```
-VULNERABILITIES: 취약점 목록 (OWASP 분류·심각도·위치 — 심각도 등급은 CLAUDE.md "심각도 척도" 단일 기준을 따른다)
+VULNERABILITIES: 취약점 목록 (OWASP 분류·심각도·위치 — 심각도 등급은 CLAUDE.md "심각도 척도" 단일 기준을 따르고, 위반한 security-policy rule ID(SEC-xx)를 병기한다 — 해당 없으면 GEN)
 SNIPPETS: 수정 코드 스니펫
 CVE_UPGRADES: 업그레이드 필요 의존성 목록
 NEXT_AGENT: ops-checker (체이닝 시) 또는 없음 (단독 호출 시 보고 후 종료)
@@ -139,17 +139,17 @@ AKIA[0-9A-Z]{16}        # AWS Access Key ID
 ## 출력 형식
 
 ```
-[VULN] CRITICAL | A03-Injection | UserRepository.java:45 | JPQL 문자열 직접 조합
+[VULN] CRITICAL | A03-Injection · SEC-05 | UserRepository.java:45 | JPQL 문자열 직접 조합
   → 수정: ":name" 파라미터 바인딩 사용
   → 코드:
     @Query("SELECT u FROM User u WHERE u.name = :name")
     List<User> findByName(@Param("name") String name);
 
-[VULN] HIGH | A01-AccessControl | OrderController.java:32 | IDOR 의심 (Controller~Service 전체 경로에 소유권 검증 없음)
+[VULN] HIGH | A01-AccessControl · SEC-02 | OrderController.java:32 | IDOR 의심 (Controller~Service 전체 경로에 소유권 검증 없음)
   → 수정: OrderService#getOrder 내부에 현재 인증 사용자와 리소스 소유자 비교 로직 추가
   → 패턴: repository.findById(orderId) 호출 전 SecurityContextHolder로 인증 주체 확인
 
-[VULN] HIGH | HardcodedSecret | application.properties:8 | DB 패스워드 하드코딩
+[VULN] HIGH | HardcodedSecret · SEC-01 | application.properties:8 | DB 패스워드 하드코딩
   → 수정: ${DB_PASSWORD} 환경변수 또는 AWS Parameter Store 참조
 
 [CVE] HIGH | spring-core:5.3.20 → 5.3.39 (CVE-2024-XXXX)

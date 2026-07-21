@@ -6,7 +6,7 @@ paths:
 
 # 테스트 작성 컨벤션
 
-## 통합 테스트 작성 전 필수 확인: JWT vs 세션 인증
+## TEST-01. 통합 테스트 작성 전 필수 확인: JWT vs 세션 인증
 
 테스트 파일을 작성하기 **전에** 프로젝트의 인증 방식을 먼저 확인한다.
 
@@ -33,7 +33,7 @@ paths:
 > `Authorization: Bearer {testToken}` 헤더 주입 방식으로 작성한다. JWT 환경에서
 > `@WithMockUser`를 잘못 사용하면 테스트가 401로 "통과"하는 더 위험한 상황이 되기 때문이다.
 
-## `@SpringBootTest` + `@AutoConfigureMockMvc` 조합 선택 기준
+## TEST-02. `@SpringBootTest` + `@AutoConfigureMockMvc` 조합 선택 기준
 
 | 목적 | 어노테이션 조합 | 비고 |
 |---|---|---|
@@ -43,7 +43,7 @@ paths:
 `RANDOM_PORT` + `MockMvc`를 함께 쓰면 MockMvc가 포트를 무시하고 동작해 의도와 다른 결과가
 나올 수 있다. **혼용 금지.**
 
-## 테스트 메서드 명명 규칙
+## TEST-03. 테스트 메서드 명명 규칙
 
 테스트 **메서드명**은 `{메서드명}_{조건}_{기대결과}` 형식:
 - `getUser_existingId_returnsUserResponse`
@@ -52,7 +52,7 @@ paths:
 `@DisplayName`에는 메서드명을 그대로 넣지 않는다. 사람이 읽을 수 있는 한국어 문장을 작성한다
 (예: `"존재하는 사용자 ID로 조회 시 UserResponse 반환"`).
 
-## Edge Case 탐색 체크리스트
+## TEST-04. Edge Case 탐색 체크리스트
 
 - [ ] `null` 입력값 처리
 - [ ] 빈 컬렉션 (`[]`) 반환 시 `null` 반환하지 않는지
@@ -64,7 +64,7 @@ paths:
 - [ ] 인증 토큰 없는 요청 → 401 반환 확인
 - [ ] 권한 없는 사용자 요청 → 403 반환 확인
 
-## 각 메서드당 최소 케이스 (단위 테스트)
+## TEST-05. 각 메서드당 최소 케이스 (단위 테스트)
 
 1. **정상 케이스**: 기대 결과 반환
 2. **경계값**: null, 빈 문자열, 최대/최소 값, 빈 컬렉션

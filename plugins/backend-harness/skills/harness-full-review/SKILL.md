@@ -22,9 +22,14 @@ code-quality → perf-analyzer → security-checker → ops-checker → code-rev
 
 ## 실행 순서
 
-1~4. `code-quality` → `perf-analyzer` → `security-checker` → `ops-checker` 순서로 호출하고
-   각 `ISSUES`/`SNIPPETS`/`VULNERABILITIES`를 수집한다 (이 단계는 파일을 수정하지 않는다).
-5. `code-reviewer` 호출. `PRIOR_AGENTS: code-quality, perf-analyzer, security-checker, ops-checker` 전달.
+1. `code-quality` / `perf-analyzer` / `security-checker` / `ops-checker` 4종을 **병렬로 dispatch**
+   하고 각 `ISSUES`/`SNIPPETS`/`VULNERABILITIES`를 수집한다 — 이 단계는 파일을 수정하지 않아
+   상호 독립이다 (`CLAUDE.md` "병렬 실행과 실행 실패 처리" 참조. 병렬 실행이 불가능한 환경이면
+   순차로 실행하되 순서는 무관하다).
+   에이전트가 크래시하면 같은 규칙에 따라 1회 재시도 → 재실패 시 건너뛰고 `PRIOR_AGENTS`에서
+   제외하며 완료 보고에 미실행을 명시한다.
+2. 4종 모두 종료 후 `code-reviewer` 호출. `PRIOR_AGENTS`에는 **실제로 완주한** 보고 전담
+   에이전트만 전달한다 (기본: `code-quality, perf-analyzer, security-checker, ops-checker`).
 
 ## Gate — 자동 수정 사이클 진입 전 사용자 확인 (필수)
 

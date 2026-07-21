@@ -11,7 +11,7 @@ paths:
 
 # API Convention Rules
 
-## URL 설계
+## API-01. URL 설계
 
 - **리소스명**: 복수형 명사 사용 (`/users`, `/orders`, `/products`)
 - **케이싱**: kebab-case (`/user-profiles`, `/order-items`)
@@ -19,7 +19,7 @@ paths:
 - **동사 금지**: `/getUser` (X) → `/users/{id}` (O)
 - **버전**: URL 경로에 포함 (`/api/v1/users`)
 
-## 표준 응답 포맷 — `ApiResponse<T>`
+## API-02. 표준 응답 포맷 — `ApiResponse<T>`
 
 모든 API 응답(성공·실패)은 공통 래퍼 `ApiResponse<T>`
 (프로젝트 공통 `dto/resp` 패키지)로 감싼다. 응답 바디는 `code` + `data` 두 필드이며,
@@ -86,7 +86,7 @@ public class ApiResponse<T> {
 }
 ```
 
-## HTTP 상태 코드 기준
+## API-03. HTTP 상태 코드 기준
 
 | 상황 | 코드 |
 |---|---|
@@ -105,14 +105,14 @@ public class ApiResponse<T> {
 | 서버 오류 | 500 Internal Server Error |
 | 일시적 사용 불가 (Circuit Open / 셧다운 중) | 503 Service Unavailable |
 
-## 페이지네이션
+## API-04. 페이지네이션
 
 - **방식**: Cursor 기반 (offset 방식 금지 — 대용량 데이터에서 성능 저하)
 - **기본 size**: 20, **최대 size**: 100
 - cursor는 Base64 인코딩된 불투명 값 (클라이언트가 파싱 불가)
 - 요청 파라미터: `?cursor=xxx&size=20`
 
-## 공통 규칙
+## API-05. 공통 규칙
 
 - 날짜/시간: ISO 8601 형식 (`2024-01-15T09:30:00Z`), 항상 UTC
 - ID: UUID v4 (순차 Long ID 외부 노출 금지)
