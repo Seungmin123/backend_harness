@@ -26,27 +26,15 @@ EXTERNAL_API:     {{EXTERNAL_API}}     # true | false  (외부 API 연동 여부
 DB_READ_REPLICA:  {{DB_READ_REPLICA}}  # true | false  (읽기 전용 복제본 운용 여부)
 ```
 
-### 값 선택 기준
-
-| 항목 | 값 | 활성화되는 체크 |
-|---|---|---|
-| `CACHE_SERVER: none` | 캐시 서버 미운용 | 캐시 관련 체크 전면 비활성화 |
-| `CACHE_SERVER: redis` | Redis 운용 중 | TTL·Eviction·커넥션 풀·Redis 헬스체크 |
-| `CACHE_SERVER: caffeine` | 로컬 인메모리 캐시 | TTL·메모리 압박 체크 (Redis 체크 제외) |
-| `CACHE_SERVER: redis+caffeine` | Look-aside 이중 캐시 | 양쪽 체크 모두 활성화 |
-| `MESSAGE_BROKER: none` | 브로커 미사용 | 브로커 관련 체크 전면 비활성화 |
-| `MESSAGE_BROKER: application-event` | `ApplicationEventPublisher` 기반 | **Kafka 전환 용이성 체크 활성화** (인터페이스 분리·직렬화 포맷) |
-| `MESSAGE_BROKER: kafka` | Kafka 운용 중 | 멱등성·DLQ·Trace ID 전파·Consumer 재처리 |
-| `MESSAGE_BROKER: sqs` | AWS SQS 운용 중 | 가시성 타임아웃·DLQ·메시지 중복 처리 |
-| `MESSAGE_BROKER: kafka+sqs` | Kafka + SQS 혼용 | 양쪽 체크 모두 활성화 |
-| `EXTERNAL_API: true` | 외부 API 연동 | 타임아웃·Retry·Circuit Breaker |
-| `EXTERNAL_API: false` | 외부 API 없음 | 해당 체크 비활성화 |
-| `DB_READ_REPLICA: true` | 읽기 복제본 운용 | `@Transactional(readOnly=true)` 라우팅 검증 |
-| `DB_READ_REPLICA: false` | 단일 DB | 복제본 라우팅 체크 비활성화 |
+각 값이 활성화하는 체크의 상세 매핑은 `ops-checker`(브로커·외부 API)·`perf-analyzer`(캐시·레플리카)
+에이전트의 조건부 체크 표와 각 rule의 `〔조건〕` 표기가 원본이다. 요약: `CACHE_SERVER`/
+`DB_READ_REPLICA`는 perf 체크와 신규 API 체인의 perf-analyzer 편입 여부를, `MESSAGE_BROKER`는
+브로커 운용 체크(`application-event`면 Kafka 전환 용이성 체크)를, `EXTERNAL_API`는
+타임아웃·Retry·Circuit Breaker 체크를 결정한다.
 
 > **버전 값의 용도**: 에이전트는 `JAVA_VERSION`/`SPRING_BOOT_VERSION`을 읽어 버전 의존 제안을
-> 조정한다(예: 가상 스레드는 Java 21+에서만, Boot 버전에 맞는 설정 키·의존성 좌표 사용).
-> 이 값과 빌드 파일(`pom.xml`/`build.gradle`)이 어긋나면 빌드 파일이 사실의 원천이다 — 이 값을 갱신한다.
+> 조정한다. 이 값과 빌드 파일(`pom.xml`/`build.gradle`)이 어긋나면 빌드 파일이 사실의 원천이다 —
+> 이 값을 갱신한다.
 
 ## 문서 체계 (docs/) — 수명 모델
 
@@ -61,22 +49,14 @@ DB_READ_REPLICA:  {{DB_READ_REPLICA}}  # true | false  (읽기 전용 복제본 
 | `docs/features/<도메인>.md` | 영구 | 도메인 주인 | 코드만 봐서는 모르는 것: 상태 머신, 외부 연동 제약, 과거 장애에서 배운 함정 |
 | `docs/plans/PLAN_*.md` | 작업 단위 | 작성자 | 구현 설계 (As-Is/To-Be, ERD, API 명세) |
 
-### 승격 규칙 (작업 머지 시)
+**승격 규칙 (작업 머지 시)**: PLAN·장애 대응에서 오래 살아남을 지식만 살아있는 문서로 옮긴다 —
+도메인 동작·함정은 `docs/features/<도메인>.md`(대부분 여기, 장애에서 배운 함정도 "함정" 섹션에
+직접), 새 기술 결정은 `docs/ADR.md`, 구조·규칙 변화는 `ARCHITECTURE.md`/`PRD.md`/`.claude/rules/*`.
+원문 `PLAN_*.md`는 승격 후 삭제하고 커밋 메시지에 파일명을 남긴다.
 
-1. PLAN·장애 대응에서 **오래 살아남을 지식만** 살아있는 문서로 옮긴다.
-   - 도메인 동작·함정 → `docs/features/<도메인>.md` (대부분 여기)
-   - 새 기술 결정 → `docs/ADR.md` (가끔)
-   - 구조·규칙·scope 변화 → `ARCHITECTURE.md`/`PRD.md`/`.claude/rules/*` (드물게)
-2. 원문(`docs/plans/PLAN_*.md`)은 승격 후 **삭제**한다. 커밋 메시지에 원문 파일명을 남긴다.
-3. 장애 대응은 별도 분석 문서를 만들지 않고, 배운 함정을 바로 해당 도메인의
-   `docs/features/<도메인>.md` "함정" 섹션에 추가한다.
-
-### 사용 시점
-
-- **기능 개발**(여러 파일에 걸친 규모): `docs/plans/PLAN_X.md` 작성 → 절대 규칙 1(Plan First)의
-  Plan Mode 논의 근거로 사용 → 구현 → 머지 시 위 승격 규칙 적용.
-- **작은 작업**(버그 수정, 필드 추가): PLAN 생략. 단, 작업 도메인에 `docs/features/<도메인>.md`가
-  있으면 먼저 읽게 한다. 도메인 동작이 바뀌면 **같은 PR에서 features 문서를 갱신**한다.
+**사용 시점**: 여러 파일에 걸친 기능 개발은 `docs/plans/PLAN_X.md` 작성 → Plan First 논의 근거로
+사용 → 머지 시 승격. 작은 작업은 PLAN 생략하되 해당 도메인의 features 문서가 있으면 먼저 읽고,
+도메인 동작이 바뀌면 같은 PR에서 갱신한다.
 
 ## 아키텍처 의존성 (레이어 경계)
 

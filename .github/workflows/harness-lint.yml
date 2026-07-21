@@ -1,0 +1,71 @@
+name: harness-lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/backend-harness
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JSON 유효성 (plugin.json / hooks.json / project-settings.json / marketplace.json)
+        run: |
+          jq -e . .claude-plugin/plugin.json > /dev/null
+          jq -e . hooks/hooks.json > /dev/null
+          jq -e . templates/project-settings.json > /dev/null
+          if [ -f "$GITHUB_WORKSPACE/.claude-plugin/marketplace.json" ]; then
+            jq -e . "$GITHUB_WORKSPACE/.claude-plugin/marketplace.json" > /dev/null
+          fi
+
+      - name: 훅 스크립트 문법 검사
+        run: |
+          for f in hooks/*.sh; do bash -n "$f"; done
+
+      - name: 구버전 응답 포맷 잔재 검사 (규칙↔에이전트 드리프트 가드)
+        run: |
+          # api-convention이 ApiResponse<T>(code+data)로 개편된 뒤 금지된 구규격 토큰.
+          # 하나라도 발견되면 규칙 개편이 소비 문서에 전파되지 않은 것이다 (README "하네스 개선 절차" 2번).
+          set -e
+          fail=0
+          for pat in 'meta\.requestId' '\{ data, meta \}' 'error\.requestId' '의도된 비대칭'; do
+            if grep -rEn "$pat" agents/ skills/ commands/ templates/ rules/ --include='*.md' --include='*.template'; then
+              echo "::error::구버전 응답 포맷 잔재 발견: $pat"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: rule ID 중복 검사
+        run: |
+          ids=$(grep -hoE '^## [A-Z]+-[0-9]+\.' rules/*.md | sort)
+          dups=$(echo "$ids" | uniq -d)
+          if [ -n "$dups" ]; then
+            echo "::error::중복 rule ID: $dups"
+            exit 1
+          fi
+          echo "rule ID $(echo "$ids" | wc -l)개, 중복 없음"
+
+      - name: 마켓플레이스 키 내부 일관성 (project-settings ↔ harness-init ↔ 루트 README)
+        run: |
+          key=$(jq -r '.extraKnownMarketplaces | keys[0]' templates/project-settings.json)
+          plugin=$(jq -r '.enabledPlugins | keys[0]' templates/project-settings.json)
+          echo "marketplace key: $key / enabled plugin: $plugin"
+          grep -q "extraKnownMarketplaces.$key" commands/harness-init.md \
+            || { echo "::error::harness-init.md가 project-settings의 마켓플레이스 키($key)와 다릅니다"; exit 1; }
+          grep -q "\"$key\"" "$GITHUB_WORKSPACE/README.md" \
+            || { echo "::error::루트 README의 extraKnownMarketplaces 키가 $key 와 다릅니다"; exit 1; }
+          [ "$plugin" = "backend-harness@$key" ] \
+            || { echo "::error::enabledPlugins($plugin)가 backend-harness@$key 형식이 아닙니다"; exit 1; }
+
+      - name: 심각도 척도·병렬 실행 계약 존재 검사 (SSOT 유실 가드)
+        run: |
+          grep -q "## 심각도 척도" templates/CLAUDE.md.template
+          grep -q "## 병렬 실행과 실행 실패 처리" templates/CLAUDE.md.template
+          grep -q "HIGH 이상(CRITICAL 포함)" agents/code-reviewer.md
+          grep -q "tdd.red_confirmed\|tdd\.red_confirmed" agents/code-reviewer.md
