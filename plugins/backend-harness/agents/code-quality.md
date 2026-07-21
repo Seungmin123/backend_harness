@@ -24,7 +24,7 @@ FOCUS: 특정 항목 집중 여부 (선택)
 
 ```
 ISSUES: 이슈 목록 (아래 형식)
-REFACTOR_PRIORITY: HIGH/MEDIUM/LOW 분류된 리팩토링 목록
+REFACTOR_PRIORITY: HIGH/MEDIUM/LOW 분류된 리팩토링 목록 (등급은 CLAUDE.md "심각도 척도" 단일 기준을 따른다)
 NEXT_AGENT: perf-analyzer (전체 검토 체이닝 시) 또는 없음 (단독 호출 시 보고 후 종료)
 SUMMARY: 품질 현황 요약
 ```

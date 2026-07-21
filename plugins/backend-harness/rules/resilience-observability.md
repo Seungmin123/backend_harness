@@ -48,8 +48,8 @@ resilience4j.retry:
 > 재시도해도 결과가 달라지지 않으며, 불필요한 부하만 발생한다. 사용하는 HTTP 클라이언트
 > 라이브러리(Feign / RestTemplate / WebClient)에 따라 예외 클래스가 다르므로 실제 프로젝트
 > 의존성 버전을 확인하고 해당 타입을 명시한다(라이브러리별 `$` 내부 클래스 표기 포함, YAML에서
-> `$` 포함 클래스명은 따옴표 필수). 클래스명 검증 책임 소재는 `.claude/agents/ops-checker.md`
-> "Retry" 섹션을 따른다.
+> `$` 포함 클래스명은 따옴표 필수). 클래스명 검증 책임 소재는 `ops-checker` 에이전트
+> (backend-harness 플러그인 제공)의 "Retry" 섹션을 따른다.
 
 ## Circuit Breaker 〔`EXTERNAL_API: true`〕
 
@@ -127,10 +127,10 @@ management:
 
 - `/actuator/health` 응답 3초 이내 (ECS 기본 타임아웃)
 - ECS Task Definition 헬스체크 `startPeriod` 60초 권장 (Cold Start 고려)
-- `/actuator/**` 인증/인가 설정은 이 표준이 아니라 `.claude/agents/security-checker.md`가 검토한다.
+- `/actuator/**` 인증/인가 설정은 이 표준이 아니라 `security-checker` 에이전트(backend-harness 플러그인 제공)가 검토한다.
 
 ## Kafka / SQS 운용 기준
 
 `MESSAGE_BROKER: kafka` / `sqs` / `kafka+sqs`일 때의 멱등성·DLQ·Trace ID 전파·가시성 타임아웃 등
 세부 기준은 대부분의 프로젝트에 해당하지 않으므로 여기 옮기지 않고
-`.claude/agents/ops-checker.md`의 "메시지 브로커" 섹션에 그대로 둔다.
+`ops-checker` 에이전트(backend-harness 플러그인 제공)의 "메시지 브로커" 섹션에 그대로 둔다.

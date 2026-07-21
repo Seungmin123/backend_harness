@@ -41,9 +41,14 @@ api-developer          (Phase 1 Plan 제시 → 사용자 CONFIRM 필수 → Pha
 2. `qa-engineer` 호출, `CONTEXT`에 1번의 `SUMMARY` 전달 → `CREATED_FILES`, `COVERAGE_GAP` 수신
 3. `security-checker` 호출 → `VULNERABILITIES`, `SNIPPETS`, `CVE_UPGRADES` 수신
 4. `ops-checker` 호출 → `ISSUES`, `SNIPPETS` 수신
-5. `code-reviewer` 호출. `PRIOR_AGENTS: security-checker, ops-checker` 전달, `CONTEXT`에는
+5. **기계 검증 게이트 (code-reviewer 선행 조건)**: 전체 테스트(`./mvnw test` 또는
+   `./gradlew test`)를 실행해 **green임을 확인한 뒤에만** `code-reviewer`를 호출한다.
+   red면 code-reviewer를 호출하지 않는다 — 실패 테스트를 `FOCUS`로 지정해 구현 결함이면
+   `api-developer`, 테스트 자체 결함이면 `qa-engineer`에게 먼저 수정시키고 이 게이트를 재실행한다.
+   (LLM 리뷰는 기계 검증이 통과한 결과물에 대해서만 의미가 있다.)
+6. `code-reviewer` 호출. `PRIOR_AGENTS: security-checker, ops-checker` 전달, `CONTEXT`에는
    **최초 사용자 요청 원문**(1~4단계 SUMMARY가 아님)을 전달한다.
-6. `VERDICT: FAIL` → `harness-review-cycle` 스킬 문서로 위임한다. 사이클 진입 방식은
+7. `VERDICT: FAIL` → `harness-review-cycle` 스킬 문서로 위임한다. 사이클 진입 방식은
    **자동 진행**이다 — 신규 API 체인은 새로 만드는 코드이므로 사용자 확인 없이 즉시 수정 사이클을
    발동한다.
    `VERDICT: PASS` 또는 `PASS_WITH_WARNINGS` → 완료.
@@ -74,9 +79,16 @@ api-developer          (Phase 1 Plan 제시 → 사용자 CONFIRM 필수 → Pha
     { "agent": "security-checker", "vulnerabilities": ["..."] },
     { "agent": "ops-checker", "issues": ["..."] }
   ],
-  "review_cycle": { "round": 1, "max": 3, "verdict": "PASS" }
+  "review_cycle": { "round": 1, "max": 3, "verdict": "PASS", "issues": [], "unresolved": [] }
 }
 ```
+
+- `review_cycle.issues` / `unresolved`의 기록 규칙은 `harness-review-cycle` 스킬 문서의
+  "산출물" 섹션을 따른다 (FAIL 이슈의 구조화 저장 — 재시도 FOCUS의 원천).
+- **`chain-report.json`은 커밋하지 않는다** — 로컬 작업 상태 파일이며 `/harness-init`이
+  `.gitignore`에 등록한다. 미등록 상태면 이 스킬이 첫 기록 전에 `.gitignore`에 추가한다.
+- 동시 체인 실행은 지원하지 않는다. 시작 시점에 진행 중(최종 verdict 없음)인
+  `chain-report.json`이 이미 있으면 덮어쓰지 말고 사용자에게 먼저 확인한다.
 
 세션이 끊긴 뒤 이 스킬이 재호출되면 `chain-report.json` 존재 여부를 확인하고, 있으면
 "이전 체인이 {마지막 단계}까지 진행되었습니다. 이어서 진행할까요?"라고 사용자에게 먼저 묻는다.

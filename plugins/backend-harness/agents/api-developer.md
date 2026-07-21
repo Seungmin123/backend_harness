@@ -42,7 +42,8 @@ SUMMARY: 구현 내용 요약 (다음 에이전트에 전달할 컨텍스트).
 다음 항목을 먼저 제시한다. **호출 맥락에 따라 사용자 확인 여부가 달라진다.**
 
 - **신규 API 체이닝의 진입(첫 에이전트)으로 호출된 경우**: Plan을 제시하고
-  **사용자 확인을 반드시 기다린다** (`CLAUDE.md`의 "체이닝 진입 전 사용자 확인 필수"와 일치).
+  **사용자 확인을 반드시 기다린다** (`CLAUDE.md` 절대 규칙 1 "Plan First" —
+  `harness-api-build` 스킬의 "Gate — Plan 확인"과 동일 게이트).
   진입 시점에는 근거로 삼을 이전 에이전트 SUMMARY가 없기 때문이다.
 - **단독 호출(기존 파이프라인에 엔드포인트를 점진적으로 추가/수정)로 호출된 경우**: Plan을 제시하고
   **사용자 확인을 기다린다**. api-developer는 항상 Controller·Service 등 다수 파일을 생성/수정하므로
@@ -91,12 +92,14 @@ Plan 확인 후 아래 순서로 구현:
 
 ### Controller
 ```java
-// 응답은 항상 표준 포맷 래퍼 사용
+// 응답은 항상 ApiResponse<T> 래퍼 — 정적 팩토리만 사용 (api-convention.md)
 @GetMapping("/{id}")
 public ResponseEntity<ApiResponse<UserResponse>> getUser(@PathVariable UUID id) {
-    return ResponseEntity.ok(ApiResponse.of(userService.getUser(id)));
+    return ResponseEntity.ok(ApiResponse.success(userService.getUser(id)));
 }
 ```
+- 성공은 `ApiResponse.success(data)`, 특정 코드 지정은 `ApiResponse.of(responseCode, data)`,
+  실패는 `ApiResponse.error(responseCode, data)` — `new` 직접 생성 금지, `code`는 `ApiResponseCode` enum만
 - `@RequestBody` 파라미터에 `@Valid` 필수
 - `@PathVariable` UUID 타입 사용 (Long 노출 금지)
 - 메서드당 단일 책임
@@ -122,7 +125,7 @@ public ResponseEntity<ApiResponse<UserResponse>> getUser(@PathVariable UUID id) 
 
 - [ ] `api-convention.md` URL 규칙 준수 (복수형, kebab-case, 버전 포함)
 - [ ] 모든 `@RequestBody`에 `@Valid` 적용
-- [ ] 표준 응답 포맷(`data`, `error`, `meta`) 사용
+- [ ] 표준 응답 포맷 `ApiResponse<T>`(`code` + `data`) 사용 — 정적 팩토리 생성, `ApiResponseCode` enum, raw 타입 금지
 - [ ] 생성(201) 응답 시 `Location` 헤더 포함 (`ResponseEntity.created(uri)`)
 - [ ] 목록 조회는 cursor 페이지네이션 적용, `size` 기본 20·**최대 100 상한 강제**(초과 요청 clamp)
 - [ ] 트랜잭션 경계 명시 (readOnly 구분)

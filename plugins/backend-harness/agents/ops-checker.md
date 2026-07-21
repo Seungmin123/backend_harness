@@ -30,7 +30,7 @@ FOCUS: 특정 영역 집중 여부 (선택: timeout | retry | circuit-breaker | 
 ## 출력 계약
 
 ```
-ISSUES: 이슈 목록
+ISSUES: 이슈 목록 (심각도 등급은 CLAUDE.md "심각도 척도" 단일 기준을 따른다)
 SNIPPETS: Resilience4j 설정 예시, 권장 구현 코드
 NEXT_AGENT: code-reviewer (체이닝 시) 또는 없음 (단독 호출 시 보고 후 종료)
 SUMMARY: 복원력·관찰 가능성 현황 요약

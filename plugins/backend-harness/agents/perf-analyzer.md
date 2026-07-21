@@ -22,7 +22,7 @@ FOCUS: 특정 항목 집중 여부 (선택: jpa | cache | concurrency | ecs)
 ## 출력 계약
 
 ```
-ISSUES: 이슈 목록 (심각도 HIGH/MEDIUM/LOW)
+ISSUES: 이슈 목록 (심각도 등급은 CLAUDE.md "심각도 척도" 단일 기준을 따른다)
 SNIPPETS: 개선 코드 스니펫
 NEXT_AGENT: security-checker (체이닝 시) 또는 없음 (단독 호출 시 보고 후 종료)
 SUMMARY: 성능 현황 요약

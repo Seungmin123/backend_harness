@@ -26,7 +26,7 @@ FOCUS: 특정 OWASP 항목 집중 여부 (선택)
 ## 출력 계약
 
 ```
-VULNERABILITIES: 취약점 목록 (OWASP 분류·심각도·위치)
+VULNERABILITIES: 취약점 목록 (OWASP 분류·심각도·위치 — 심각도 등급은 CLAUDE.md "심각도 척도" 단일 기준을 따른다)
 SNIPPETS: 수정 코드 스니펫
 CVE_UPGRADES: 업그레이드 필요 의존성 목록
 NEXT_AGENT: ops-checker (체이닝 시) 또는 없음 (단독 호출 시 보고 후 종료)

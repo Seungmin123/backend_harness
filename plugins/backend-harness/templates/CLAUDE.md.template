@@ -115,6 +115,21 @@ DB_READ_REPLICA:  {{DB_READ_REPLICA}}  # true | false  (읽기 전용 복제본 
 
 보고 전담 에이전트 목록: `code-quality`, `perf-analyzer`, `security-checker`, `ops-checker`.
 
+## 심각도 척도 (전 에이전트 공통 — 단일 출처)
+
+모든 에이전트의 이슈 보고(`ISSUES`/`VULNERABILITIES`/`REFACTOR_PRIORITY`)와 `code-reviewer`의
+게이트 판정은 아래 단일 척도를 따른다. 에이전트가 새 등급을 임의로 만들지 않는다.
+
+| 등급 | 정의 | 최종 게이트(code-reviewer) 영향 |
+|---|---|---|
+| **CRITICAL** | 즉시 악용 가능한 보안 결함, 데이터 파손·유출 (주로 `security-checker`가 사용) | **HIGH 이상 — 미반영 시 FAIL** |
+| **HIGH** | 장애·데이터 불일치·보안 정책 위반을 유발할 수 있는 결함 | **미반영 시 FAIL** |
+| **MEDIUM** | 품질·유지보수·성능 저하 리스크 (즉시 장애로 이어지지는 않음) | WARNING (재검토 미트리거) |
+| **LOW** | 개선 권장 사항 | WARNING 또는 기록만 |
+
+`code-reviewer` Step 2.5(선행 체인 이슈 반영 검증)의 대상은 **"HIGH 이상(CRITICAL 포함)"**이다 —
+`security-checker`의 CRITICAL이 "HIGH"라는 문자에 걸리지 않아 누락되는 일이 없어야 한다.
+
 ## Hooks (backend-harness 플러그인이 등록)
 
 git-guard(위험 git/DB 명령 차단·확인) → pre-commit(.env·Checkstyle·시크릿 검사) →

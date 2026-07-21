@@ -53,10 +53,10 @@ code-quality → perf-analyzer → security-checker → ops-checker → code-rev
 ====================================
   harness-full-review 완료
 ====================================
-code-quality:     {N}건 (HIGH {n})
-perf-analyzer:    {N}건 (HIGH {n})
-security-checker: {N}건 (HIGH {n})
-ops-checker:      {N}건 (HIGH {n})
+code-quality:     {N}건 (HIGH 이상 {n})
+perf-analyzer:    {N}건 (HIGH 이상 {n})
+security-checker: {N}건 (HIGH 이상 {n} — CRITICAL {n} 포함)
+ops-checker:      {N}건 (HIGH 이상 {n})
 code-reviewer:    {PASS/PASS_WITH_WARNINGS/FAIL} (재검토 {N}/3회, 게이트: {진행/리포트만})
 ====================================
 ```

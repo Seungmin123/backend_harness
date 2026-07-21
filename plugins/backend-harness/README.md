@@ -92,7 +92,50 @@ frontmatter의 `tools`를 그에 맞게 좁힌다.
 이 저장소가 하네스의 단일 원본(source of truth)이다.
 
 1. 에이전트·스킬·훅·rules 수정은 이 저장소에 PR로 제출하고 팀 리뷰를 거친다.
-2. 머지 후 플러그인 버전(`.claude-plugin/plugin.json`의 `version`)을 올린다.
-3. 각 사용자는 플러그인 업데이트로 반영받는다 — 프로젝트별 재설치가 필요 없다.
+2. **rule을 수정했다면 소비 에이전트·스킬을 grep으로 대조한다** (정합성 드리프트 방지 —
+   과거 `api-convention.md` 응답 포맷 개편이 에이전트 본문에 전파되지 않아 리뷰 기준이
+   갈라진 사례가 있다):
+   ```bash
+   # 수정한 rule 이름과, rule에서 바꾼 핵심 키워드(클래스명·필드명·용어) 양쪽으로 검색
+   grep -rn "api-convention" agents/ skills/ commands/ templates/
+   grep -rn "ApiResponse\|바꾼-키워드" agents/ skills/ commands/ templates/
+   ```
+   검색 결과에 걸린 문서의 해당 구절이 개편 후 규격과 일치하는지 확인하고 같은 PR에서 갱신한다.
+   에이전트·스킬의 계약(입출력 필드, 심각도 등급, 게이트 조건)을 바꿀 때도 동일하게
+   그 계약을 인용하는 문서를 grep으로 대조한다.
+3. 머지 후 플러그인 버전(`.claude-plugin/plugin.json`의 `version`)을 올린다.
+4. 각 사용자는 플러그인 업데이트로 반영받는다 — 프로젝트별 재설치가 필요 없다.
    단 **rules는 프로젝트에 복사본**이 있으므로, rules 변경 시 각 프로젝트에서
    `/harness-init` 재실행(또는 rules만 재복사)이 필요하다.
+
+## 워크스루 — 신규 API 1건의 전체 흐름
+
+"사용자 프로필 조회/수정 API 만들어줘"라고 요청했을 때 실제로 일어나는 일:
+
+1. **라우팅**: `harness-orchestrate`가 "신규 API 개발"로 판단 → `harness-api-build` 체인 시작.
+2. **Plan 게이트 (자동 통과 불가)**: `api-developer`가 Phase 1 Plan(엔드포인트 목록, 스키마,
+   레이어 구조, 트랜잭션 경계, 인증 방식, 단계별 verify 기준)을 제시하고 **사용자 확인을
+   기다린다**. 여기서 승인해야 코드가 생성된다.
+3. **체인 실행**: `api-developer`(구현) → `qa-engineer`(테스트 생성) → `security-checker`(보안
+   검토 보고) → `ops-checker`(복원력·관찰성 검토 보고). 각 단계 산출물이 `chain-report.json`
+   (gitignore 대상)에 기록된다.
+4. **기계 검증 게이트**: `./mvnw test`(또는 `./gradlew test`)가 green이어야 다음 단계로 간다.
+   red면 `code-reviewer`를 호출하지 않고 fix 담당이 먼저 수정한다.
+5. **최종 검토**: `code-reviewer`가 원본 요청 원문과 diff만 보고 독립 검토 —
+   요구사항 커버리지, 컨벤션(`ApiResponse<T>` 등), 선행 에이전트의 HIGH 이상(CRITICAL 포함)
+   이슈 반영 여부, 테스트 충분성을 판정한다.
+6. **판정 분기**: `PASS`/`PASS_WITH_WARNINGS` → 완료 보고 후 종료.
+   `FAIL` → `harness-review-cycle`이 이슈별 fix 담당을 호출하고 재검토 (최대 3회,
+   FAIL 이슈는 `chain-report.json`의 `review_cycle.issues`에 구조화 기록).
+   3회 초과 시 `[ESCALATION]`으로 사용자에게 넘긴다 — 수동 수정 후 `/review`로 재진입한다.
+
+### 용어 요약
+
+| 용어 | 의미 |
+|---|---|
+| 보고 전담 에이전트 | 기본적으로 이슈 보고만 하는 4종 (`code-quality`/`perf-analyzer`/`security-checker`/`ops-checker`). fix 담당 지정 시에만 기존 파일 한정 수정 |
+| fix-owner | FAIL 이슈 유형별 수정 담당 에이전트 (`harness-review-cycle`의 매핑표) |
+| 체인 | 에이전트를 정해진 순서로 자동 실행하는 스킬 (`harness-api-build` 등) |
+| 게이트 | 자동 진행을 멈추고 조건 충족(사용자 확인 또는 테스트 green)을 요구하는 지점 |
+| chain-report.json | 체인 진행 상태·이슈를 기록하는 로컬 파일 (커밋 금지, 세션 단절 시 재개 근거) |
+| 심각도 척도 | CRITICAL/HIGH/MEDIUM/LOW 단일 기준 — 프로젝트 CLAUDE.md "심각도 척도" 섹션이 SSOT |

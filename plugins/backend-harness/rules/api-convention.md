@@ -1,11 +1,12 @@
 ---
-description: URL 설계, 표준 응답 포맷, HTTP 상태 코드, 페이지네이션 등 REST API 컨벤션. api-developer 구현과 code-reviewer 검토의 공통 기준.
+description: URL 설계, 표준 응답 포맷(ApiResponse 래퍼), HTTP 상태 코드, 페이지네이션 등 REST API 컨벤션. api-developer 구현과 code-reviewer 검토의 공통 기준.
 paths:
   - "src/main/java/**/controller/**/*.java"
   - "src/main/java/**/*Controller.java"
   - "src/main/java/**/*Request.java"
   - "src/main/java/**/*Response.java"
   - "src/main/java/**/*ExceptionHandler.java"
+  - "src/main/java/**/dto/resp/**/*.java"
 ---
 
 # API Convention Rules
@@ -18,55 +19,72 @@ paths:
 - **동사 금지**: `/getUser` (X) → `/users/{id}` (O)
 - **버전**: URL 경로에 포함 (`/api/v1/users`)
 
-## 표준 응답 포맷
+## 표준 응답 포맷 — `ApiResponse<T>`
 
-### 성공 응답
-```json
-{
-  "data": { },
-  "meta": {
-    "requestId": "uuid",
-    "timestamp": "ISO-8601"
-  }
+모든 API 응답(성공·실패)은 공통 래퍼 `ApiResponse<T>`
+(프로젝트 공통 `dto/resp` 패키지)로 감싼다. 응답 바디는 `code` + `data` 두 필드이며,
+`@JsonInclude(NON_NULL)`이므로 `data`가 `null`이면 필드 자체가 생략된다.
+
+```java
+@Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ApiResponse<T> {
+    private String code;   // ApiResponseCode의 code 값
+    private T data;        // 응답 페이로드 (null이면 직렬화 시 생략)
 }
 ```
 
-### 페이지네이션 응답
+### 생성 규칙 — 정적 팩토리만 사용 (생성자는 private)
+
+| 상황 | 사용 |
+|---|---|
+| 성공 | `ApiResponse.success(data)` — `SUCCESS` 코드 자동 적용 |
+| 특정 코드 직접 지정 | `ApiResponse.of(responseCode, data)` |
+| 실패 (기본 메시지) | `ApiResponse.error(responseCode, data)` |
+| 실패 (메시지 오버라이드) | `ApiResponse.error(responseCode, overrideMessage, data)` |
+
+- `new` 직접 생성 금지 — 팩토리 메서드만 사용한다 (생성자가 private이라 컴파일 수준에서도 막힌다).
+- `code`는 반드시 `ApiResponseCode` enum에서 가져온다. 문자열 리터럴 하드코딩 금지.
+- 새 응답 코드가 필요하면 `ApiResponseCode`에 추가한다 (기존 code 값과 충돌 확인).
+- Controller 반환 타입은 `ApiResponse<구체DTO>` — raw 타입(`ApiResponse` 단독) 금지.
+
+### 응답 형태
+
+```json
+// 성공 (code 값은 ApiResponseCode 정의를 따름)
+{ "code": "<SUCCESS code>", "data": { } }
+
+// data 없는 성공 — NON_NULL이므로 data 필드 생략
+{ "code": "<SUCCESS code>" }
+
+// 실패 — 같은 래퍼, code로 분기. 필드 오류 등 상세는 data에 담는다
+{ "code": "<에러 code>", "data": { "fieldErrors": [ { "field": "email", "reason": "형식이 올바르지 않습니다" } ] } }
+```
+
+- 클라이언트 분기 처리는 항상 바디의 `code` 기준. HTTP 상태 코드는 아래 표를 함께 따른다.
+- 스택 트레이스, 내부 클래스명 절대 포함 금지.
+- 요청 추적: 바디에 `requestId` 필드가 없으므로 `X-Request-Id` 응답 헤더 + MDC(traceId)로
+  추적한다 (`resilience-observability.md`의 "분산 추적" 참조).
+- `@RestControllerAdvice` 예외 처리도 동일하게 이 래퍼로 감싸서 반환한다.
+
+> ⚠️ **알려진 제약**: `error(responseCode, overrideMessage, data)`는 현재 클래스에 `message`
+> 필드가 없어 `overrideMessage`가 **무시된다**. 메시지 오버라이드가 실제로 필요하면
+> `message` 필드 추가 여부를 먼저 팀에서 결정할 것 — 그 전까지 이 오버로드는 사용하지 않는다.
+
+### 페이지네이션 응답 (data 내부 구조)
+
 ```json
 {
-  "data": [],
-  "meta": {
-    "requestId": "uuid",
-    "timestamp": "ISO-8601",
-    "pagination": {
-      "nextCursor": "base64-encoded-cursor",
-      "hasNext": true,
-      "size": 20
-    }
+  "code": "<SUCCESS code>",
+  "data": {
+    "items": [],
+    "nextCursor": "base64-encoded-cursor",
+    "hasNext": true,
+    "size": 20
   }
 }
 ```
-
-### 에러 응답
-```json
-{
-  "error": {
-    "code": "RESOURCE_NOT_FOUND",
-    "message": "사용자를 찾을 수 없습니다.",
-    "details": [],
-    "requestId": "uuid"
-  }
-}
-```
-
-- `code`: SCREAMING_SNAKE_CASE 상수 (클라이언트가 분기 처리용으로 사용)
-- `message`: 사용자에게 노출 가능한 한국어 메시지
-- `details`: 필드 유효성 오류 목록 (`[{ "field": "email", "reason": "형식이 올바르지 않습니다" }]`)
-- 스택 트레이스, 내부 클래스명 절대 포함 금지
-
-> **`requestId` 위치 규약 (의도된 비대칭)**: 성공 응답은 `meta.requestId`, 에러 응답은 `error.requestId`에 둔다.
-> 에러 시에는 `meta` 래퍼가 없으므로 `error` 내부에 포함하는 것이 의도된 설계다.
-> 공통 응답 래퍼/`@RestControllerAdvice` 구현 시 두 경로 모두에서 동일한 `requestId`(MDC traceId 연동 권장)를 채울 것.
 
 ## HTTP 상태 코드 기준
 

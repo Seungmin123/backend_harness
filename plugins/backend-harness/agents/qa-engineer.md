@@ -94,8 +94,8 @@ class UserControllerIntegrationTest {
     void getUser_validId_returns200() throws Exception {
         mockMvc.perform(get("/api/v1/users/{id}", userId))
                .andExpect(status().isOk())
-               .andExpect(jsonPath("$.data.id").value(userId.toString()))
-               .andExpect(jsonPath("$.meta.requestId").exists());
+               .andExpect(jsonPath("$.code").exists())   // ApiResponse<T> 래퍼 — code는 ApiResponseCode 값
+               .andExpect(jsonPath("$.data.id").value(userId.toString()));
     }
 
     // ── JWT 기반 인증을 사용하는 경우 ──
